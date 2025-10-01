@@ -34,12 +34,9 @@ ebook/**
 # Ignore everything inside logs
 logs/**
 
-
 # Ignore everything inside credentials
 credentials/**
 
 # Allow .gitkeep marker files
 !credentials/**/.gitkeep
 
-# Temporal audio files
-source/temp_audio.wav
