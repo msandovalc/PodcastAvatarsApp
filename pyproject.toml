@@ -1,0 +1,65 @@
+[project]
+name = "podcastavatarsapp"
+version = "0.1.0"
+description = "Proyecto para generar podcasts con múltiples avatares usando MuseTalk"
+authors = [
+    { name = "msandovalc", email = "msandovalgm@live.com.mx" }
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+
+# This section tells Poetry how to manage packages
+packages = [
+    { include = "source" }
+]
+
+[tool.poetry]
+package-mode = false
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu124"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "openmmlab"
+url = "https://download.openmmlab.com/mmcv/dist/cu124/torch2.8/index.html"
+priority = "explicit"
+
+
+[tool.poetry.dependencies]
+musetalk = { path = "MuseTalk", develop = true }
+torch = {source = "pytorch"}
+torchaudio = {source = "pytorch"}
+torchvision = {source = "pytorch"}
+
+# --- Libraries with Range or Minimum Version Constraints ---
+moviepy = ">=1.0.3"
+ffmpeg-python = ">=0.2.0"
+numpy = ">=1.26"
+opencv-python = ">=4.10"
+pandas = ">=2.3.2,<3.0.0"
+psutil = ">=7.1.0,<8.0.0"
+termcolor = ">=3.1.0,<4.0.0"
+
+# --- LangChain and Google API Dependencies (Specific Ranges) ---
+langchain = ">=0.3.27,<0.4.0"
+langchain-google-genai = ">=2.1.12,<3.0.0"
+google-api-python-client = ">=2.183.0,<3.0.0"
+google-cloud-texttospeech = ">=2.31.0,<3.0.0"
+google-auth-oauthlib = ">=1.2.2,<2.0.0"
+google-cloud-storage = ">=3.4.0,<4.0.0"
+python-dotenv = ">=1.1.1,<2.0.0"
+pydub = ">=0.25.1,<0.26.0"
+google-genai = ">=1.39.1,<2.0.0"
+chardet = ">=5.2.0,<6.0.0"
+protobuf = ">=5.28.0"
+openpyxl = ">=3.1.5,<4.0.0"
+
+# --- Libraries Without Specific Version (*) ---
+openai-whisper = "*"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
