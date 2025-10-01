@@ -1,0 +1,20 @@
+avator_1:
+  audio_clips:
+    audio_0: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_cristina_campos_v1.wav"
+    audio_1: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_cristina_campos_v2.wav"
+    audio_2: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_cristina_campos_v3.wav"
+    audio_3: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_cristina_campos_v4.wav"
+    audio_4: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_cristina_campos_v5.wav"
+  bbox_shift: 5
+  preparation: true
+  video_path: "/kaggle/input/musetalkdatainputfiles/dreamina-2025-07-28-2156.mp4"
+avator_2:
+  audio_clips:
+    audio_0: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_rosa_estela_v1.wav"
+    audio_1: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_rosa_estela_v2.wav"
+    audio_2: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_rosa_estela_v3.wav"
+    audio_3: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_rosa_estela_v4.wav"
+    audio_4: "/kaggle/input/musetalkdatainputfiles/voice_elevenlabs_rosa_estela_v5.wav"
+  bbox_shift: 5
+  preparation: true
+  video_path: "/kaggle/input/musetalkdatainputfiles/model_v10.mp4"

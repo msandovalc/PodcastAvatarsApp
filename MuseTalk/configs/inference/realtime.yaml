@@ -1,0 +1,14 @@
+avator_1:
+  audio_clips:
+    audio_0: '"F:\Development\PyCharm\Projects\PodcastAvatarsApp\podcast_content\audio\segment_1.wav"'
+    audio_1: '"F:\Development\PyCharm\Projects\PodcastAvatarsApp\podcast_content\audio\segment_3.wav"'
+  bbox_shift: 5
+  preparation: true
+  video_path: '"data/video/yongen.mp4"'
+avator_2:
+  audio_clips:
+    audio_0: '"F:\Development\PyCharm\Projects\PodcastAvatarsApp\podcast_content\audio\segment_2.wav"'
+    audio_1: '"F:\Development\PyCharm\Projects\PodcastAvatarsApp\podcast_content\audio\segment_4.wav"'
+  bbox_shift: 5
+  preparation: true
+  video_path: '"data/video/yongen.mp4"'
