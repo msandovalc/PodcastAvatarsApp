@@ -1,0 +1,45 @@
+# Ignorar carpetas de PyCharm
+.idea/
+
+# Ignorar entornos virtuales
+.venv/
+env/
+venv/
+
+# Ignorar archivos de Poetry
+poetry.lock
+
+# Ignorar archivos de Python compilados
+__pycache__/
+*.pyc
+
+# Ignore everything inside audiobook_content
+podcast_content/**
+
+# Allow subdirectories (so Git "sees" them)
+!podcast_content/**/
+
+# Allow .gitkeep marker files
+!podcast_content/**/.gitkeep
+
+# ✅ Allow music folder and its files
+!podcast_content/music/**
+
+# Ignore everything inside ebook
+ebook/**
+
+# Allow .gitkeep marker files
+!ebook/**/.gitkeep
+
+# Ignore everything inside logs
+logs/**
+
+
+# Ignore everything inside credentials
+credentials/**
+
+# Allow .gitkeep marker files
+!credentials/**/.gitkeep
+
+# Temporal audio files
+source/temp_audio.wav
