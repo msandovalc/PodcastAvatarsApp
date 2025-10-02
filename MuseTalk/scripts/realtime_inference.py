@@ -26,6 +26,10 @@ import threading
 import queue
 import time
 import subprocess
+from pathlib import Path
+
+# Get the project root (adjust according to your repo structure)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def fast_check_ffmpeg():
@@ -341,10 +345,10 @@ def run_musetalk_inference(
     ffmpeg_path: str = "./ffmpeg-4.4-amd64-static/",
     gpu_id: int = 0,
     vae_type: str = "sd-vae",
-    unet_config: str = "./models/musetalk/musetalk.json",
-    unet_model_path: str = "./models/musetalk/pytorch_model.bin",
-    whisper_dir: str = "./models/whisper",
-    inference_config_path: str = "configs/inference/realtime.yaml",
+    unet_config: str = "./MuseTalk/models/musetalk/musetalk.json",
+    unet_model_path: str = "./MuseTalk/models/musetalk/pytorch_model.bin",
+    whisper_dir: str = "./MuseTalk/models/whisper",
+    inference_config_path: str = "./MuseTalk/configs/inference/realtime.yaml",
     bbox_shift_default: int = 0,
     result_dir: str = './results',
     extra_margin: int = 10,
