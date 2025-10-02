@@ -25,11 +25,17 @@ class VAE():
         :param use_float16: Whether to use float16 precision.
         """
 
-        print(f"VAE PROJECT_ROOT: {PROJECT_ROOT}")
+        # Check if the config file exists
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError(f"model_path file not found at: {model_path}")
+
+        # Check if the model file exists
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError(f"UNet model file not found at: {model_path}")
 
         print(f"VAE model_path: {model_path}")
         self.model_path = str(model_path)
-        print(f"VAE self.model_path: {self.model_path}")
+
         self.vae = AutoencoderKL.from_pretrained(self.model_path)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

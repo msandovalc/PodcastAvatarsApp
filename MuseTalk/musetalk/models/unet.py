@@ -9,6 +9,7 @@ import time
 import numpy as np
 import os
 
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model=384, max_len=5000):
         super(PositionalEncoding, self).__init__()
@@ -25,27 +26,41 @@ class PositionalEncoding(nn.Module):
         pe = self.pe[:, :seq_len, :]
         x = x + pe.to(x.device)
         return x
-    
+
+
 class UNet():
-    def __init__(self, 
+    def __init__(self,
                  unet_config,
                  model_path,
                  use_float16=False,
                  device=None
-        ):
+                 ):
+
+        # Check if the config file exists
+        if not os.path.isfile(unet_config):
+            raise FileNotFoundError(f"UNet config file not found at: {unet_config}")
+
+        # Check if the model file exists
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError(f"UNet model file not found at: {model_path}")
+
         with open(unet_config, 'r') as f:
             unet_config = json.load(f)
         self.model = UNet2DConditionModel(**unet_config)
         self.pe = PositionalEncoding(d_model=384)
+
         if device != None:
             self.device = device
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        weights = torch.load(model_path) if torch.cuda.is_available() else torch.load(model_path, map_location=self.device)
+
+        weights = torch.load(model_path) if torch.cuda.is_available() else torch.load(model_path,
+                                                                                      map_location=self.device)
         self.model.load_state_dict(weights)
         if use_float16:
             self.model = self.model.half()
         self.model.to(self.device)
-    
+
+
 if __name__ == "__main__":
     unet = UNet()
