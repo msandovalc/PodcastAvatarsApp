@@ -28,6 +28,7 @@ priority = "explicit"
 
 
 [tool.poetry.dependencies]
+chumpy = { version = "0.70", source = "pypi" }
 musetalk = { path = "MuseTalk", develop = true }
 torch = {version = "2.5.1", source = "pytorch"}
 torchvision = {version = "0.20.1", source = "pytorch"}
