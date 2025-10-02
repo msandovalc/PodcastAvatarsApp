@@ -27,7 +27,7 @@ class VAE():
 
         # Check if the model path exists
         if not os.path.exists(model_path):
-            raise FileNotFoundError(f"UNet model path does not exist: {model_path}")
+            raise FileNotFoundError(f"VAE - UNet model path does not exist: {model_path}")
 
         print(f"VAE model_path: {model_path}")
         self.model_path = str(model_path)

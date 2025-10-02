@@ -16,12 +16,12 @@ from musetalk.models.unet import UNet,PositionalEncoding
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Default paths
-DEFAULT_UNET_MODEL_PATH = PROJECT_ROOT / "models" / "musetalkV15" / "unet.pth"
-DEFAULT_UNET_CONFIG = PROJECT_ROOT / "models" / "musetalkV15" / "musetalk.json"
-DEFAULT_VAE_PATH = PROJECT_ROOT / "models" / "sd-vae"
-DEFAULT_FFMPEG_PATH = PROJECT_ROOT / "ffmpeg-4.4-amd64-static"
-DEFAULT_WHISPER_DIR = PROJECT_ROOT / "models" / "whisper"
-DEFAULT_INFERENCE_CONFIG = PROJECT_ROOT / "configs" / "inference" / "realtime.yaml"
+DEFAULT_UNET_MODEL_PATH = str(PROJECT_ROOT / "models" / "musetalkV15" / "unet.pth")
+DEFAULT_UNET_CONFIG = str(PROJECT_ROOT / "models" / "musetalkV15" / "musetalk.json")
+DEFAULT_VAE_PATH = str(PROJECT_ROOT / "models" / "sd-vae")
+DEFAULT_FFMPEG_PATH = str(PROJECT_ROOT / "ffmpeg-4.4-amd64-static")
+DEFAULT_WHISPER_DIR = str(PROJECT_ROOT / "models" / "whisper")
+DEFAULT_INFERENCE_CONFIG = str(PROJECT_ROOT / "configs" / "inference" / "realtime.yaml")
 
 
 def load_all_model(
@@ -36,6 +36,15 @@ def load_all_model(
         model_path=PROJECT_ROOT / "models" / vae_type
     )
     print(f"load unet model from {unet_model_path}")
+
+    # Check if the config file exists
+    if not os.path.isfile(unet_config):
+        raise FileNotFoundError(f"Utils - UNet config file not found at: {unet_config}")
+
+    # Check if the model file exists
+    if not os.path.isfile(unet_model_path):
+        raise FileNotFoundError(f"Utils - UNet model file not found at: {unet_model_path}")
+
     unet = UNet(
         unet_config=unet_config,
         model_path=unet_model_path,

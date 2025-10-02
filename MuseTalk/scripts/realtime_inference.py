@@ -395,6 +395,15 @@ def run_musetalk_inference(
 
         # --- Load UNet and VAE models ---
         print("[INFO] Loading UNet and VAE models...")
+
+        # Check if the config file exists
+        if not os.path.isfile(unet_config):
+            raise FileNotFoundError(f"Inference - UNet config file not found at: {unet_config}")
+
+        # Check if the model file exists
+        if not os.path.isfile(unet_model_path):
+            raise FileNotFoundError(f"Inference - UNet model file not found at: {unet_model_path}")
+
         vae, unet, pe = load_all_model(
             unet_model_path=unet_model_path,
             vae_type=vae_type,
