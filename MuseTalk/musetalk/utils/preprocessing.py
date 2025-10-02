@@ -11,11 +11,17 @@ from mmpose.apis import inference_topdown, init_model
 from mmpose.structures import merge_data_samples
 import torch
 from tqdm import tqdm
+from pathlib import Path
 
 # initialize the mmpose model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-config_file = './musetalk/utils/dwpose/rtmpose-l_8xb32-270e_coco-ubody-wholebody-384x288.py'
-checkpoint_file = './models/dwpose/dw-ll_ucoco_384.pth'
+
+# Get the project root directory (3 levels up from the current script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Absolute paths
+config_file = str(PROJECT_ROOT / "MuseTalk" / "musetalk" / "utils" / "dwpose" / "rtmpose-l_8xb32-270e_coco-ubody-wholebody-384x288.py")
+checkpoint_file = str(PROJECT_ROOT / "MuseTalk" / "musetalk" / "utils" / "dwpose" / "dw-ll_ucoco_384.pth")
 model = init_model(config_file, checkpoint_file, device=device)
 
 # initialize the face detection model
