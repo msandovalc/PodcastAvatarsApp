@@ -34,8 +34,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 FFMPEG_PATH = str(PROJECT_ROOT / "ffmpeg-4.4-amd64-static")
 GPU_ID = 0
 VAE_TYPE = "sd-vae"
-UNET_CONFIG = str(PROJECT_ROOT / "MuseTalk" / "models" / "musetalk.json")
-UNET_MODEL_PATH = str(PROJECT_ROOT / "MuseTalk" / "models" / "pytorch_model.bin")
+UNET_CONFIG = str(PROJECT_ROOT / "MuseTalk" /"models" / "musetalk" / "musetalk.json")
+UNET_MODEL_PATH = str(PROJECT_ROOT / "MuseTalk" / "models"  / "musetalk" / "pytorch_model.bin")
 WHISPER_DIR = str(PROJECT_ROOT / "MuseTalk" / "models" / "whisper")
 INFERENCE_CONFIG_PATH = str(PROJECT_ROOT / "MuseTalk" / "configs" / "inference" / "realtime.yaml")
 
