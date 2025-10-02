@@ -1,0 +1,3 @@
+[submodule "MuseTalk"]
+	path = MuseTalk
+	url = git@github.com:msandovalc/MuseTalk.git

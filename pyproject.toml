@@ -33,7 +33,9 @@ musetalk = { path = "MuseTalk", develop = true }
 torch = {version = "2.5.1", source = "pytorch"}
 torchvision = {version = "0.20.1", source = "pytorch"}
 torchaudio = {version = "2.5.1", source = "pytorch"}
-mmcv = { version = "2.1.0", source = "openmmlab" }
+mmcv = "2.1.0"
+# mmcv is installed manually because it requires compilation from source
+# pip install --upgrade mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html
 mmpose = "1.3.2"
 mmengine = "*"
 mmdet = "*"

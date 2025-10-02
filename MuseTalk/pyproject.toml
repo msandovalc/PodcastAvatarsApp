@@ -4,6 +4,11 @@ version = "0.1.0"
 description = "MuseTalk - Talking head generation"
 authors = ["TMElyralab"]
 
+[[tool.poetry.source]]
+name = "openmmlab"
+url = "https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html"
+priority = "explicit"
+
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 diffusers = "0.30.2"
@@ -25,6 +30,14 @@ requests = "*"
 omegaconf = "*"
 ffmpeg-python = "*"
 moviepy = "*"
+
+mmcv = "2.1.0"
+# mmcv is installed manually because it requires compilation from source
+# pip install --upgrade mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html
+mmpose = "1.3.2"
+mmengine = "*"
+mmdet = "*"
+
 
 [build-system]
 requires = ["poetry-core"]
