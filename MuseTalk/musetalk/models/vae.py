@@ -20,6 +20,8 @@ class VAE():
         :param resized_img: The size to which images are resized.
         :param use_float16: Whether to use float16 precision.
         """
+
+        print(f"VAE model_path: {model_path}")
         self.model_path = model_path
         self.vae = AutoencoderKL.from_pretrained(self.model_path)
 
