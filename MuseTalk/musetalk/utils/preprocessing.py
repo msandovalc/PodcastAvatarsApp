@@ -21,7 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Absolute paths
 config_file = str(PROJECT_ROOT / "musetalk" / "utils" / "dwpose" / "rtmpose-l_8xb32-270e_coco-ubody-wholebody-384x288.py")
-checkpoint_file = str(PROJECT_ROOT / "musetalk" / "utils" / "dwpose" / "dw-ll_ucoco_384.pth")
+checkpoint_file = str(PROJECT_ROOT / "models" / "dwpose" / "dw-ll_ucoco_384.pth")
 model = init_model(config_file, checkpoint_file, device=device)
 
 # initialize the face detection model
