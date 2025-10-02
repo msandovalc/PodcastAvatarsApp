@@ -25,13 +25,9 @@ class VAE():
         :param use_float16: Whether to use float16 precision.
         """
 
-        # Check if the config file exists
-        if not os.path.isfile(model_path):
-            raise FileNotFoundError(f"model_path file not found at: {model_path}")
-
-        # Check if the model file exists
-        if not os.path.isfile(model_path):
-            raise FileNotFoundError(f"UNet model file not found at: {model_path}")
+        # Check if the model path exists
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"UNet model path does not exist: {model_path}")
 
         print(f"VAE model_path: {model_path}")
         self.model_path = str(model_path)
