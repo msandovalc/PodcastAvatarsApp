@@ -7,19 +7,31 @@ import torch.nn.functional as F
 from einops import rearrange
 import shutil
 import os.path as osp
+from pathlib import Path
 
 from musetalk.models.vae import VAE
 from musetalk.models.unet import UNet,PositionalEncoding
 
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Default paths
+DEFAULT_UNET_MODEL_PATH = PROJECT_ROOT / "models" / "musetalkV15" / "unet.pth"
+DEFAULT_UNET_CONFIG = PROJECT_ROOT / "models" / "musetalkV15" / "musetalk.json"
+DEFAULT_VAE_PATH = PROJECT_ROOT / "models" / "sd-vae"
+DEFAULT_FFMPEG_PATH = PROJECT_ROOT / "ffmpeg-4.4-amd64-static"
+DEFAULT_WHISPER_DIR = PROJECT_ROOT / "models" / "whisper"
+DEFAULT_INFERENCE_CONFIG = PROJECT_ROOT / "configs" / "inference" / "realtime.yaml"
+
 
 def load_all_model(
-    unet_model_path=os.path.join("models", "musetalkV15", "unet.pth"),
+    unet_model_path=DEFAULT_UNET_MODEL_PATH,
     vae_type="sd-vae",
-    unet_config=os.path.join("models", "musetalkV15", "musetalk.json"),
+    unet_config=DEFAULT_UNET_CONFIG,
     device=None,
 ):
     vae = VAE(
-        model_path = os.path.join("models", vae_type),
+        model_path=PROJECT_ROOT / "models" / vae_type
     )
     print(f"load unet model from {unet_model_path}")
     unet = UNet(

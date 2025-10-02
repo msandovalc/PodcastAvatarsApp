@@ -6,13 +6,17 @@ import cv2
 import numpy as np
 from PIL import Image
 import os
+from pathlib import Path
+
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 class VAE():
     """
     VAE (Variational Autoencoder) class for image processing.
     """
 
-    def __init__(self, model_path="./models/sd-vae-ft-mse/", resized_img=256, use_float16=False):
+    def __init__(self, model_path=PROJECT_ROOT / "models" / "sd-vae-ft-mse", resized_img=256, use_float16=False):
         """
         Initialize the VAE instance.
 
@@ -124,12 +128,12 @@ class VAE():
         return latent_model_input
 
 if __name__ == "__main__":
-    vae_mode_path = "./models/sd-vae-ft-mse/"
-    vae = VAE(model_path = vae_mode_path,use_float16=False)
-    img_path = "./results/sun001_crop/00000.png"
+    vae_mode_path = PROJECT_ROOT / "models" / "sd-vae-ft-mse"
+    vae = VAE(model_path=vae_mode_path,use_float16=False)
+    img_path = PROJECT_ROOT / "results" / "sun001_crop" / "00000.png"
     
-    crop_imgs_path = "./results/sun001_crop/"
-    latents_out_path = "./results/latents/"
+    crop_imgs_path = PROJECT_ROOT / "results" / "sun001_crop"
+    latents_out_path = PROJECT_ROOT / "results" / "latents"
     if not os.path.exists(latents_out_path):
         os.mkdir(latents_out_path)
 
