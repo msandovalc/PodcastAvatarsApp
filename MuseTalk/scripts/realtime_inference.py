@@ -29,7 +29,7 @@ import subprocess
 from pathlib import Path
 
 # Get the project root (adjust according to your repo structure)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def fast_check_ffmpeg():

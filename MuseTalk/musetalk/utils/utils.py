@@ -13,7 +13,7 @@ from musetalk.models.vae import VAE
 from musetalk.models.unet import UNet,PositionalEncoding
 
 # Project root (2 levels up from this script)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Default paths
 DEFAULT_UNET_MODEL_PATH = PROJECT_ROOT / "models" / "musetalkV15" / "unet.pth"

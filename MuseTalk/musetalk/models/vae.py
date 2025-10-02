@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 # Project root (2 levels up from this script)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 class VAE():
     """
