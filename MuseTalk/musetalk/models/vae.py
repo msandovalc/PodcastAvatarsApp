@@ -25,6 +25,8 @@ class VAE():
         :param use_float16: Whether to use float16 precision.
         """
 
+        print(f"VAE PROJECT_ROOT: {PROJECT_ROOT}")
+
         print(f"VAE model_path: {model_path}")
         self.model_path = str(model_path)
         print(f"VAE self.model_path: {self.model_path}")

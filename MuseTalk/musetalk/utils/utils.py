@@ -30,6 +30,8 @@ def load_all_model(
     unet_config=DEFAULT_UNET_CONFIG,
     device=None,
 ):
+    print(f"UTILS PROJECT_ROOT: {PROJECT_ROOT}")
+
     vae = VAE(
         model_path=PROJECT_ROOT / "models" / vae_type
     )
