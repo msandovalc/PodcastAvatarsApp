@@ -27,6 +27,7 @@ class VAE():
 
         print(f"VAE model_path: {model_path}")
         self.model_path = str(model_path)
+        print(f"VAE self.model_path: {self.model_path}")
         self.vae = AutoencoderKL.from_pretrained(self.model_path)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
