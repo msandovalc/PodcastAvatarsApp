@@ -40,3 +40,4 @@ credentials/**
 # Allow .gitkeep marker files
 !credentials/**/.gitkeep
 
+.env
