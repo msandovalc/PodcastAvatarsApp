@@ -679,7 +679,7 @@ if __name__ == "__main__":
 
     try:
         print("[INFO] Starting MuseTalk inference from class method...")
-        # results_list = run_musetalk_inference()
+        results_list = run_musetalk_inference()
         results_list = inferense_v2()
 
         print(f"[INFO] Inference finished successfully from class method.: {results_list}")
