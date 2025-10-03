@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.append("..")
 
 # Project root (2 levels up from this script)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Default paths
 WHISPER_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "whisper" / "tiny.pt")
