@@ -27,17 +27,19 @@ import queue
 import time
 import subprocess
 from pathlib import Path
+import types
 
 # Get the project root (adjust according to your repo structure)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 FFMPEG_PATH = str(PROJECT_ROOT / "ffmpeg-4.4-amd64-static")
 GPU_ID = 0
 VAE_TYPE = "sd-vae"
-UNET_CONFIG = str(PROJECT_ROOT / "MuseTalk" /"models" / "musetalk" / "musetalk.json")
-UNET_MODEL_PATH = str(PROJECT_ROOT / "MuseTalk" / "models"  / "musetalk" / "pytorch_model.bin")
-WHISPER_DIR = str(PROJECT_ROOT / "MuseTalk" / "models" / "whisper")
-INFERENCE_CONFIG_PATH = str(PROJECT_ROOT / "MuseTalk" / "configs" / "inference" / "realtime.yaml")
+UNET_CONFIG = str(PROJECT_ROOT / "models" / "musetalk" / "musetalk.json")
+UNET_MODEL_PATH = str(PROJECT_ROOT / "models" / "musetalk" / "pytorch_model.bin")
+WHISPER_DIR = str(PROJECT_ROOT / "models" / "whisper")
+INFERENCE_CONFIG_PATH = str(PROJECT_ROOT / "configs" / "inference" / "realtime.yaml")
+RESULTS_PATH = str(PROJECT_ROOT / "results")
 
 
 def fast_check_ffmpeg():
@@ -349,28 +351,34 @@ class Avatar:
 
 
 def run_musetalk_inference(
-    version: str = "v15",
-    ffmpeg_path: str = "./ffmpeg-4.4-amd64-static/",
-    gpu_id: int = 0,
-    vae_type: str = "sd-vae",
-    unet_config: str = UNET_CONFIG,
-    unet_model_path: str = UNET_MODEL_PATH,
-    whisper_dir: str = WHISPER_DIR,
-    inference_config_path: str = INFERENCE_CONFIG_PATH,
-    bbox_shift_default: int = 0,
-    result_dir: str = './results',
-    extra_margin: int = 10,
-    fps: int = 25,
-    audio_padding_length_left: int = 2,
-    audio_padding_length_right: int = 2,
-    batch_size: int = 20,
-    output_vid_name: str = None,
-    use_saved_coord: bool = False,
-    saved_coord: bool = False,
-    parsing_mode: str = 'jaw',
-    left_cheek_width: int = 90,
-    right_cheek_width: int = 90,
-    skip_save_images: bool = False
+        # --- General / Model Configs ---
+        version: str = "v15",
+        ffmpeg_path: str = FFMPEG_PATH,
+        gpu_id: int = 0,
+        vae_type: str = "sd-vae",
+        # --- Path Configs ---
+        unet_config: str = UNET_CONFIG,
+        unet_model_path: str = UNET_MODEL_PATH,
+        whisper_dir: str = WHISPER_DIR,
+        inference_config_path: str = INFERENCE_CONFIG_PATH,
+        bbox_shift: int = 0,  # Used 'bbox_shift' from argparse (replacing 'bbox_shift_default')
+        extra_margin: int = 10,
+        # --- Output / I/O ---
+        result_dir: str = RESULTS_PATH,
+        output_vid_name: str = None,
+        # --- Audio / Time Params ---
+        fps: int = 25,
+        audio_padding_length_left: int = 2,
+        audio_padding_length_right: int = 2,
+        # --- Processing / Flags ---
+        batch_size: int = 20,
+        use_saved_coord: bool = False,
+        saved_coord: bool = False,
+        skip_save_images: bool = False,
+        # --- Face Parsing / Blending ---
+        parsing_mode: str = 'jaw',
+        left_cheek_width: int = 90,
+        right_cheek_width: int = 90
 ) -> List[Dict[str, Any]]:
     """
     Function to run MuseTalk inference pipeline for avatars.
@@ -378,6 +386,11 @@ def run_musetalk_inference(
     """
 
     try:
+
+        all_params = locals()
+
+        args = types.SimpleNamespace(**all_params)
+
         print("[INFO] Loading inference configuration...")
         inference_config = OmegaConf.load(inference_config_path)
 
