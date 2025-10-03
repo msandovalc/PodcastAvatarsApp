@@ -41,6 +41,7 @@ WHISPER_DIR = str(PROJECT_ROOT / "models" / "whisper")
 INFERENCE_CONFIG_PATH = str(PROJECT_ROOT / "configs" / "inference" / "realtime.yaml")
 RESULTS_PATH = str(PROJECT_ROOT / "results")
 
+args = None
 
 def fast_check_ffmpeg():
     try:
@@ -390,6 +391,8 @@ def run_musetalk_inference(
         all_params = locals()
 
         args = types.SimpleNamespace(**all_params)
+
+        print(f"[INFO] Loading args configuration...{args}")
 
         print("[INFO] Loading inference configuration...")
         inference_config = OmegaConf.load(inference_config_path)
