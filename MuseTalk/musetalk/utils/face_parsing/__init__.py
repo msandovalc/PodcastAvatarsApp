@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from pathlib import Path
 
 # Project root (2 levels up from this script)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 # Default paths
 RESNET_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "face-parse-bisent" / "resnet18-5c106cde.pth")
