@@ -6,6 +6,14 @@ import numpy as np
 from PIL import Image
 from .model import BiSeNet
 import torchvision.transforms as transforms
+from pathlib import Path
+
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Default paths
+RESNET_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "face-parse-bisent" / "resnet18-5c106cde.pth")
+RESNET_MODEL_PATH = str(PROJECT_ROOT / "models" / "face-parse-bisent" / "79999_iter.pth")
 
 class FaceParsing():
     def __init__(self, left_cheek_width=80, right_cheek_width=80):
@@ -55,10 +63,9 @@ class FaceParsing():
         cv2.rectangle(mask, (0, 0), (center - left_cheek_width, 512), 255, -1)    # Left cheek
         cv2.rectangle(mask, (center + right_cheek_width, 0), (512, 512), 255, -1)  # Right cheek
         return mask
-
     def model_init(self, 
-                   resnet_path='./models/face-parse-bisent/resnet18-5c106cde.pth', 
-                   model_pth='./models/face-parse-bisent/79999_iter.pth'):
+                   resnet_path=RESNET_WEIGHT_PATH,
+                   model_pth=RESNET_MODEL_PATH):
         net = BiSeNet(resnet_path)
         if torch.cuda.is_available():
             net.cuda()
