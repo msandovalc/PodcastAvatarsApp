@@ -238,6 +238,12 @@ class FeatureFusionModule(nn.Module):
 
 class BiSeNet(nn.Module):
     def __init__(self, resnet_path=RESNET_WEIGHT_PATH, n_classes=19, *args, **kwargs):
+
+        print(f"FACE_PARCING MODEL PROJECT_ROOT: {PROJECT_ROOT}")
+
+        print(f"RESNET_WEIGHT_PATH: {resnet_path}")
+
+
         super(BiSeNet, self).__init__()
         self.cp = ContextPath(resnet_path)
         ## here self.sp is deleted

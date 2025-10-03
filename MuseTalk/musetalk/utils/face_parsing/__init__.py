@@ -67,6 +67,12 @@ class FaceParsing():
                    resnet_path=RESNET_WEIGHT_PATH,
                    model_pth=RESNET_MODEL_PATH):
         net = BiSeNet(resnet_path)
+
+        print(f"FACE_PARCING PROJECT_ROOT: {PROJECT_ROOT}")
+
+        print(f"RESNET_WEIGHT_PATH: {resnet_path}")
+        print(f"RESNET_MODEL_PATH: {model_pth}")
+
         if torch.cuda.is_available():
             net.cuda()
             net.load_state_dict(torch.load(model_pth)) 

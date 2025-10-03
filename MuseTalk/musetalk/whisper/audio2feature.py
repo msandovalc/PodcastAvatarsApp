@@ -20,8 +20,13 @@ class Audio2Feature():
     def __init__(self, 
                  whisper_model_type="tiny",
                  model_path=WHISPER_WEIGHT_PATH):
+
+        print(f"AUDIO2FEATURE PROJECT_ROOT: {PROJECT_ROOT}")
+
+        print(f"WHISPER_WEIGHT_PATH: {model_path}")
+
         self.whisper_model_type = whisper_model_type
-        self.model = load_model(model_path) #
+        self.model = load_model(model_path)
 
     def get_sliced_feature(self,
                            feature_array, 
