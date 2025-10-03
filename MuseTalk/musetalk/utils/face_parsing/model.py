@@ -9,6 +9,14 @@ import torchvision
 
 from .resnet import Resnet18
 # from modules.bn import InPlaceABNSync as BatchNorm2d
+from pathlib import Path
+
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Default paths
+RESNET_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "face-parse-bisent" / "resnet18-5c106cde.pth")
+RESNET_MODEL_PATH = str(PROJECT_ROOT / "models" / "face-parse-bisent" / "79999_iter.pth")
 
 
 class ConvBNReLU(nn.Module):
@@ -33,6 +41,7 @@ class ConvBNReLU(nn.Module):
             if isinstance(ly, nn.Conv2d):
                 nn.init.kaiming_normal_(ly.weight, a=1)
                 if not ly.bias is None: nn.init.constant_(ly.bias, 0)
+
 
 class BiSeNetOutput(nn.Module):
     def __init__(self, in_chan, mid_chan, n_classes, *args, **kwargs):
@@ -228,7 +237,7 @@ class FeatureFusionModule(nn.Module):
 
 
 class BiSeNet(nn.Module):
-    def __init__(self, resnet_path='models/resnet18-5c106cde.pth', n_classes=19, *args, **kwargs):
+    def __init__(self, resnet_path=RESNET_WEIGHT_PATH, n_classes=19, *args, **kwargs):
         super(BiSeNet, self).__init__()
         self.cp = ContextPath(resnet_path)
         ## here self.sp is deleted

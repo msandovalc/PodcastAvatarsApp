@@ -28,6 +28,15 @@ import imageio
 import ffmpeg
 from moviepy.editor import *
 from transformers import WhisperModel
+from pathlib import Path
+
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Default paths
+UNET_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "musetalkV15" / "unet.pth")
+UNET_CONFIG_PATH = str(PROJECT_ROOT / "models" / "musetalkV15" / "musetalk.json")
+WHISPER_MODEL_PATH = str(PROJECT_ROOT / "models" / "whisper")
 
 ProjectDir = os.path.abspath(os.path.dirname(__file__))
 CheckpointsDir = os.path.join(ProjectDir, "models")
@@ -159,8 +168,6 @@ def download_model():
         sys.exit(1)
     else:
         print("All required model files exist.")
-
-
 
 
 download_model()  # for huggingface deployment.
@@ -386,13 +393,12 @@ def inference(audio_path, video_path, bbox_shift, extra_margin=10, parsing_mode=
     return output_vid_name,bbox_shift_text
 
 
-
 # load model weights
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vae, unet, pe = load_all_model(
-    unet_model_path="./models/musetalkV15/unet.pth", 
+    unet_model_path=UNET_WEIGHT_PATH,
     vae_type="sd-vae",
-    unet_config="./models/musetalkV15/musetalk.json",
+    unet_config=UNET_CONFIG_PATH,
     device=device
 )
 
@@ -423,11 +429,10 @@ unet.model = unet.model.to(device)
 timesteps = torch.tensor([0], device=device)
 
 # Initialize audio processor and Whisper model
-audio_processor = AudioProcessor(feature_extractor_path="./models/whisper")
-whisper = WhisperModel.from_pretrained("./models/whisper")
+audio_processor = AudioProcessor(feature_extractor_path=WHISPER_MODEL_PATH)
+whisper = WhisperModel.from_pretrained(WHISPER_MODEL_PATH)
 whisper = whisper.to(device=device, dtype=weight_dtype).eval()
 whisper.requires_grad_(False)
-
 
 def check_video(video):
     if not isinstance(video, str):

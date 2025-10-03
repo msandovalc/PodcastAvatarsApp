@@ -4,12 +4,22 @@ import soundfile as sf
 import numpy as np
 import time
 import sys
+from pathlib import Path
+
+
 sys.path.append("..")
+
+# Project root (2 levels up from this script)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Default paths
+WHISPER_WEIGHT_PATH = str(PROJECT_ROOT / "models" / "whisper" / "tiny.pt")
+
 
 class Audio2Feature():
     def __init__(self, 
                  whisper_model_type="tiny",
-                 model_path="./models/whisper/tiny.pt"):
+                 model_path=WHISPER_WEIGHT_PATH):
         self.whisper_model_type = whisper_model_type
         self.model = load_model(model_path) #
 
@@ -110,7 +120,7 @@ class Audio2Feature():
         return concatenated_array
 
 if __name__ == "__main__":
-    audio_processor = Audio2Feature(model_path="../../models/whisper/whisper_tiny.pt")
+    audio_processor = Audio2Feature(model_path=WHISPER_WEIGHT_PATH)
     audio_path = "./test.mp3"
     array = audio_processor.audio2feat(audio_path)
     print(array.shape)
