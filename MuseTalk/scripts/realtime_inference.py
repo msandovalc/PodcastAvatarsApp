@@ -72,13 +72,15 @@ def osmakedirs(path_list):
 
 @torch.no_grad()
 class Avatar:
-    def __init__(self, avatar_id, video_path, bbox_shift, batch_size, preparation):
+    def __init__(self,  version, avatar_id, video_path, bbox_shift, batch_size, preparation):
         self.avatar_id = avatar_id
         self.video_path = video_path
         self.bbox_shift = bbox_shift
+        self.version = version
+
         # 根据版本设置不同的基础路径
-        if args.version == "v15":
-            self.base_path = f"./results/{args.version}/avatars/{avatar_id}"
+        if self.version == "v15":
+            self.base_path = f"./results/{self.version}/avatars/{avatar_id}"
         else:  # v1
             self.base_path = f"./results/avatars/{avatar_id}"
             
@@ -94,7 +96,7 @@ class Avatar:
             "avatar_id": avatar_id,
             "video_path": video_path,
             "bbox_shift": bbox_shift,
-            "version": args.version
+            "version": self.version
         }
         self.preparation = preparation
         self.batch_size = batch_size
@@ -454,6 +456,7 @@ def run_musetalk_inference(
             bbox_shift = 0 if version == "v15" else inference_config[avatar_id]["bbox_shift"]
 
             avatar = Avatar(
+                version=version,
                 avatar_id=avatar_id,
                 video_path=video_path,
                 bbox_shift=bbox_shift,
@@ -588,6 +591,7 @@ if __name__ == "__main__":
         else:
             bbox_shift = inference_config[avatar_id]["bbox_shift"]
         avatar = Avatar(
+            version=args.version,
             avatar_id=avatar_id,
             video_path=video_path,
             bbox_shift=bbox_shift,
