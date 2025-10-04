@@ -477,9 +477,9 @@ def run_musetalk_inference(
                     "original_audio": audio_path
                 })
 
-        return results_list
+            print("[SUCCESS] MuseTalk inference finished successfully!")
 
-        print("[SUCCESS] MuseTalk inference finished successfully!")
+        return results_list
 
     except Exception as e:
         print(f"[ERROR] Inference failed: {e}")

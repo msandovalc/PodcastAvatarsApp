@@ -461,6 +461,7 @@ class GCPTextToSpeechManager:
             str: The local file path of the generated audio file.
         """
 
+        segment_paths = []
         text_content = text_content.strip()
 
         # Check if the text contains a speaker label pattern
@@ -470,13 +471,15 @@ class GCPTextToSpeechManager:
         if is_podcast_script:
             if individual_audios:
                 logger.info("Detected podcast script format. Using multi-voice synthesis with individual audios.")
-                return self.synthesize_podcast_segments(text_content, local_audio_path)
+                segment_paths = self.synthesize_podcast_segments(text_content, local_audio_path)
             else:
                 logger.info("Detected podcast script format. Using multi-voice synthesis with one audio.")
-                # return self.synthesize_podcast_audio(text_content, local_audio_path)
+                # segment_paths = self.synthesize_podcast_audio(text_content, local_audio_path)
         else:
             logger.info("Detected long-form book format. Using single-voice synthesis.")
-            # return self.synthesize_long_audio(text_content, local_audio_path)
+            # segment_paths = self.synthesize_long_audio(text_content, local_audio_path)
+
+        return segment_paths
 
     def download_audio_from_gcs(self, gcs_uri: str, local_path: str):
         """Downloads a blob from GCS to a local path."""
@@ -512,63 +515,6 @@ class GCPTextToSpeechManager:
         except Exception as e:
             logger.error(f"Error deleting files from GCS: {e}")
             raise
-
-
-def WaveNetTest():
-    # 1. El texto que quieres convertir a voz, ahora envuelto en etiquetas SSML
-    # <speak>: Etiqueta principal que indica que el texto es SSML.
-    # <prosody>: Permite controlar la velocidad (rate), tono (pitch) y volumen (volume).
-    # "slow" hace la voz más pausada y "x-low" baja ligeramente el tono, creando una sensación más cálida.
-    # <emphasis>: Da un énfasis suave a una palabra clave.
-    ssml_text = """
-    <speak>
-      <prosody rate="slow" pitch="-1.5st">
-        Hola, te damos la <emphasis level="moderate">bienvenida</emphasis>. 
-        Estamos muy contentos de que estés aquí con nosotros.
-        El último día de mi primer año de bachillerato, un bat de beisbol me golpeó en pleno
-        rostro. Uno de mis compañeros intentó hacer un movimiento largo para pegarle a la
-        pelota, pero el bat se le resbaló y voló hacia mí antes de golpearme directamente entre
-        los ojos. No conservo el recuerdo del momento justo del impacto.
-        El bat me aplastó la cara de tal manera que la nariz se me convirtió en una especie de
-        letra u distorsionada. El golpe literalmente provocó que el tejido blando de mi cerebro se
-        incrustara en la pared posterior del cráneo. De inmediato mi cerebro comenzó a
-        inflamarse como una ola expansiva que recorrió el interior de mi cabeza. Una fracción de
-        segundo bastó para que yo terminara con la nariz rota, con fracturas múltiples en el
-        cráneo y con las cuencas de los ojos hechas añicos.
-      </prosody>
-    </speak>
-    """
-
-    # Instancia del cliente
-    client = texttospeech_v1.TextToSpeechClient()
-
-    # 2. Configura el input con el parámetro `ssml` en lugar de `text`
-    synthesis_input = types.SynthesisInput(ssml=ssml_text)
-
-    # 3. Configuración de la voz
-    # Nota: La voz que mencionaste ("es-US-Chirp3-HD-Laomedeia") no es una voz estándar.
-    # Te recomiendo usar una voz WaveNet de alta calidad para Español de México,
-    # que sonará mucho más natural y cálida. `es-MX-Wavenet-A` es una excelente opción.
-    voice = types.VoiceSelectionParams(
-        language_code="es-MX",
-        name="es-MX-Wavenet-A",  # Voz femenina de alta calidad para México
-        ssml_gender=types.SsmlVoiceGender.FEMALE,
-    )
-
-    # 4. Configuración del formato de audio
-    audio_config = types.AudioConfig(
-        audio_encoding=types.AudioEncoding.MP3,
-    )
-
-    # 5. Realiza la solicitud de conversión de texto a voz
-    response = client.synthesize_speech(
-        input=synthesis_input, voice=voice, audio_config=audio_config
-    )
-
-    # 6. Guarda la respuesta en un archivo de audio
-    with open("bienvenida_calida.mp3", "wb") as out:
-        out.write(response.audio_content)
-        print('Audio content written to file "bienvenida_calida.mp3"')
 
 
 if __name__ == "__main__":
