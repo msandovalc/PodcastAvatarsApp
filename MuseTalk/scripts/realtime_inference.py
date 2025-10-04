@@ -334,23 +334,38 @@ class Avatar:
 
             if device == "cuda":
                 print(f"[INFO] Using GPU")
+
                 cmd_img2video = (
                     f"ffmpeg -y -v warning -hwaccel cuda "
-                    f"-r {fps} -f image2 -i {self.avatar_path}/tmp/%08d.png "
-                    f"-vcodec h264_nvenc -pix_fmt yuv420p -crf 18 {self.avatar_path}/temp.mp4"
+                    f"-r {fps} -f image2 "
+                    f"-i \"{self.avatar_path}/tmp/%08d.png\" "
+                    f"-vcodec h264_nvenc -pix_fmt yuv420p -crf 18 "
+                    f"\"{self.avatar_path}/temp.mp4\""
                 )
 
                 cmd_combine_audio = (
                     f"ffmpeg -y -v warning -hwaccel cuda "
-                    f"-i {audio_path} "
+                    f"-i \"{audio_path}\" "
                     f"-i {self.avatar_path}/temp.mp4 "
                     f"-c:v copy -c:a aac -b:a 192k "
                     f"{output_vid}"
                 )
 
             else:
-                cmd_img2video = f"ffmpeg -y -v warning -r {fps} -f image2 -i {self.avatar_path}/tmp/%08d.png -vcodec libx264 -vf format=yuv420p -crf 18 {self.avatar_path}/temp.mp4"
-                cmd_combine_audio = f"ffmpeg -y -v warning -i {audio_path} -i {self.avatar_path}/temp.mp4 {output_vid}"
+                cmd_img2video = (
+                    f"ffmpeg -y -v warning "
+                    f"-r {fps} -f image2 "
+                    f"-i \"{self.avatar_path}/tmp/%08d.png\" "
+                    f"-vcodec libx264 -vf format=yuv420p -crf 18 "
+                    f"\"{self.avatar_path}/temp.mp4\""
+                )
+
+                cmd_combine_audio = (
+                    f"ffmpeg -y -v warning "
+                    f"-i \"{audio_path}\" "
+                    f"-i \"{self.avatar_path}/temp.mp4\" "
+                    f"\"{output_vid}\""
+                )
 
             # optional
             print(cmd_img2video)
