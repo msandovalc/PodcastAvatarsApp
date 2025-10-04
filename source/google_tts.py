@@ -457,9 +457,10 @@ class GCPTextToSpeechManager:
         """
 
         text_content = text_content.strip()
-        
+
         # Check if the text contains a speaker label pattern
-        is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
+        # is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
+        is_podcast_script = re.search(r"(?:\n|\A)\s*Speaker\d*:", text_content)
 
         logger.info(f"Print text_content: {text_content}")
         logger.info(f"Print individual_audios: {individual_audios}")
