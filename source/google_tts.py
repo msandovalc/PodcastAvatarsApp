@@ -455,6 +455,9 @@ class GCPTextToSpeechManager:
         Returns:
             str: The local file path of the generated audio file.
         """
+
+        text_content = text_content.strip()
+        
         # Check if the text contains a speaker label pattern
         is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
 
