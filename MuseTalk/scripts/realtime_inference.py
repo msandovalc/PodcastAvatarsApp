@@ -52,6 +52,7 @@ whisper = None
 pe = None
 unet = None
 timesteps = None
+device_id = None
 
 def fast_check_ffmpeg():
     try:
@@ -267,6 +268,11 @@ class Avatar:
     @torch.no_grad()
     def inference(self, audio_path, out_vid_name, fps, skip_save_images) -> str:
         os.makedirs(self.avatar_path + '/tmp', exist_ok=True)
+
+        # --- Set computing device ---
+        torch_device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
+        print(f"[INFO] Using device: {torch_device}")
+
         print("start inference")
         ############################################## extract audio feature ##############################################
         start_time = time.time()
@@ -325,9 +331,14 @@ class Avatar:
             cmd_img2video = ""
             cmd_combine_audio = ""
 
-            output_vid = os.path.join(self.video_out_path, out_vid_name + ".mp4")  # on
+            output_vid = os.path.join(self.video_out_path, out_vid_name + ".mp4")
 
-            if device == "cuda":
+            print(f"self.video_out_path: {self.video_out_path}")
+            print(f"out_vid_name: {out_vid_name}")
+            print(f"output_vid: {output_vid}")
+            print(f"device: {torch_device}")
+
+            if torch_device == "cuda":
                 print(f"[INFO] Using GPU")
                 cmd_img2video = (
                     f"ffmpeg -y -v warning -hwaccel cuda "
@@ -401,7 +412,7 @@ def run_musetalk_inference(
     try:
 
         """Initializes global objects and configurations, checking for required API keys."""
-        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet, timesteps
+        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet, timesteps, device_id
         args = None
         vae = None
         fp = None
@@ -412,6 +423,7 @@ def run_musetalk_inference(
         pe = None
         unet = None
         timesteps = None
+        device_id = gpu_id
 
         all_params = locals()
 
@@ -431,8 +443,8 @@ def run_musetalk_inference(
                 print("[WARNING] ffmpeg not found. Make sure it's installed and path is correct.")
 
         # --- Set computing device ---
-        device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-        print(f"[INFO] Using device: {device}")
+        torch_device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+        print(f"[INFO] Using device: {torch_device}")
 
         # --- Load UNet and VAE models ---
         print("[INFO] Loading UNet and VAE models...")
