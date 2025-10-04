@@ -215,8 +215,11 @@ class GCPTextToSpeechManager:
         # speaker_regex = re.compile(r"^(Speaker\d*):(.*)")
         speaker_regex = re.compile(r"^\s*(Speaker\d+):\s*(.*)")
 
+        logger.info(f"Print speaker_regex: {speaker_regex}")
+
         for line in lines:
             match = speaker_regex.match(line)
+            logger.info(f"Print match: {match}")
             if match:
                 # If a new speaker is found, save the previous segment
                 if current_speaker is not None:
@@ -242,6 +245,8 @@ class GCPTextToSpeechManager:
                 "text": current_text.strip(),
                 "voice_name": voice_name
             })
+
+        logger.info(f"Print conversation_list: {conversation_list}")
 
         return conversation_list
 
