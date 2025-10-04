@@ -38,8 +38,8 @@ class GCPTextToSpeechManager:
     # Pre-defined voices for podcast speakers
     # Feel free to change these voices to suit your needs
     VOICE_MAPPING = {
-        "Speaker1": "es-US-Chirp3-HD-Laomedeia",  # Female Voice
-        "Speaker2": "es-US-Chirp3-HD-Algenib",  # Male Voice
+        "Speaker 1": "es-US-Chirp3-HD-Laomedeia",  # Female Voice
+        "Speaker 2": "es-US-Chirp3-HD-Algenib",  # Male Voice
         "Speaker": "es-US-Chirp3-HD-Laomedeia"   # Default Voice (e.g., for monologues)
     }
 
@@ -215,13 +215,10 @@ class GCPTextToSpeechManager:
         # speaker_regex = re.compile(r"^(Speaker\d*):(.*)")
         speaker_regex = re.compile(r"^\s*(Speaker\s*\d+):\s*(.*)")
 
-        logger.info(f"Print speaker_regex: {speaker_regex}")
-
         for line in lines:
-            logger.info(f"Checking line before clean: {repr(line)}")
             clean_line = line.strip()
             match = speaker_regex.match(clean_line)
-            logger.info(f"Checking line after clean: {repr(clean_line)} -> match: {match}")
+            # logger.info(f"Checking line after clean: {repr(clean_line)} -> match: {match}")
             if match:
                 # If a new speaker is found, save the previous segment
                 if current_speaker is not None:

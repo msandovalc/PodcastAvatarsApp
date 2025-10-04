@@ -16,8 +16,8 @@ from utils import *
 # from instagram_api import InstagramAPI
 # from video import *
 
-from muse_talk_wrapper import *
-from MuseTalk.scripts.realtime_inference import run_musetalk_inference, inferense_v2
+# from muse_talk_wrapper import *
+# from MuseTalk.scripts.realtime_inference import run_musetalk_inference, inferense_v2
 
 
 # --- Configuration ---
@@ -432,7 +432,7 @@ def create_podcast():
             image_path_output = str(IMG_DIR / chapter.get('Video cover'))
 
             # Define the local path for the output audio
-            local_audio_path = str(AUDIO_DIR / f"{sanitize_filename(chapter_name)}.wav")
+            local_audio_path = str(AUDIO_DIR / f"{sanitize_filename(book_title)}")
             logging.info(f"local_audio_path: {local_audio_path}")
 
             # logging.info("Generating intro and reflection for YouTube upload.")
@@ -446,18 +446,18 @@ def create_podcast():
                 logging.error("TTS processing failed. Skipping video generation for this topic.")
                 return
 
-            manager = MuseTalkConfigManager(str(MUSETALK_CONFIG_PATH))
-            manager.update_avatar_audio_clips_from_segments(audio_paths, preparation=True)
-            manager.save_yaml()  # Overwrites original YAML
-
-            try:
-                print("[INFO] Starting MuseTalk inference from class method...")
-                results_list = run_musetalk_inference()
-                print(f"[INFO] Inference finished successfully from class method.{results_list}")
-
-            except Exception as e:
-                print(f"[ERROR] Inference failed in class: {e}")
-                raise
+            # manager = MuseTalkConfigManager(str(MUSETALK_CONFIG_PATH))
+            # manager.update_avatar_audio_clips_from_segments(audio_paths, preparation=True)
+            # manager.save_yaml()  # Overwrites original YAML
+            #
+            # try:
+            #     print("[INFO] Starting MuseTalk inference from class method...")
+            #     results_list = run_musetalk_inference()
+            #     print(f"[INFO] Inference finished successfully from class method.{results_list}")
+            #
+            # except Exception as e:
+            #     print(f"[ERROR] Inference failed in class: {e}")
+            #     raise
 
             #
             # temp_audio = AudioFileClip(audio_path)
