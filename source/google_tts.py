@@ -213,13 +213,15 @@ class GCPTextToSpeechManager:
         # Regular expression to find speaker labels
         # Matches 'Speaker' followed by any characters until a colon, then a space
         # speaker_regex = re.compile(r"^(Speaker\d*):(.*)")
-        speaker_regex = re.compile(r"^\s*(Speaker\d+):\s*(.*)")
+        speaker_regex = re.compile(r"^\s*(Speaker\s*\d+):\s*(.*)")
 
         logger.info(f"Print speaker_regex: {speaker_regex}")
 
         for line in lines:
-            match = speaker_regex.match(line)
-            logger.info(f"Print match: {match}")
+            logger.info(f"Checking line before clean: {repr(line)}")
+            clean_line = line.strip()
+            match = speaker_regex.match(clean_line)
+            logger.info(f"Checking line after clean: {repr(clean_line)} -> match: {match}")
             if match:
                 # If a new speaker is found, save the previous segment
                 if current_speaker is not None:
@@ -467,10 +469,6 @@ class GCPTextToSpeechManager:
         # Check if the text contains a speaker label pattern
         # is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
         is_podcast_script = re.search(r"^\s*Speaker\s*\d+:", text_content, re.MULTILINE)
-
-        logger.info(f"Print text_content: {text_content}")
-        logger.info(f"Print individual_audios: {individual_audios}")
-        logger.info(f"Print is_podcast_script: {is_podcast_script}")
 
         if is_podcast_script:
             if individual_audios:
