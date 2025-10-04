@@ -435,12 +435,12 @@ def create_podcast():
             local_audio_path = str(AUDIO_DIR / f"{sanitize_filename(chapter_name)}.wav")
             logging.info(f"local_audio_path: {local_audio_path}")
 
-            logging.info("Generating intro and reflection for YouTube upload.")
-            introduction, reflection = content_generator.generate_intro_and_reflection(chapter_text[:500], language)
+            # logging.info("Generating intro and reflection for YouTube upload.")
+            # introduction, reflection = content_generator.generate_intro_and_reflection(chapter_text[:500], language)
+            #
+            # script = f"{introduction}\n\n{chapter_text}\n\n{reflection}"
 
-            script = f"{introduction}\n\n{chapter_text}\n\n{reflection}"
-
-            audio_paths = process_and_generate_audio(chapter_data=chapter, chapter_text=script,
+            audio_paths = process_and_generate_audio(chapter_data=chapter, chapter_text=chapter_text,
                                                     audio_output_path=local_audio_path)
             if not audio_paths:
                 logging.error("TTS processing failed. Skipping video generation for this topic.")
