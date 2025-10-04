@@ -503,11 +503,13 @@ def create_podcast():
             combine_start = time.time()
             output_paths = [r["output_path"] for r in video_paths]
 
-            combined_video_path = combine_videos(video_paths=output_paths, max_duration=temp_audio.duration,
-                                                 max_clip_duration=max_clip_duration, threads=n_threads)
-            combine_end = time.time()
-            logging.info(
-                f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
+            logger.info(colored(text=f"[+] Video combination path: {output_paths}", color="green"))
+
+            # combined_video_path = combine_videos(video_paths=output_paths, max_duration=temp_audio.duration,
+            #                                      max_clip_duration=max_clip_duration, threads=n_threads)
+            # combine_end = time.time()
+            # logging.info(
+            #     f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
 
 
 
