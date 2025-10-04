@@ -45,6 +45,12 @@ RESULTS_PATH = str(PROJECT_ROOT / "results")
 args = None
 vae = None
 fp = None
+audio_processor = None
+device = None
+weight_dtype = None
+whisper = None
+pe = None
+unet = None
 
 def fast_check_ffmpeg():
     try:
@@ -394,10 +400,16 @@ def run_musetalk_inference(
     try:
 
         """Initializes global objects and configurations, checking for required API keys."""
-        global args, vae, fp
+        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet
         args = None
         vae = None
         fp = None
+        audio_processor = None
+        device = None
+        weight_dtype = None
+        whisper = None
+        pe = None
+        unet = None
 
         all_params = locals()
 
