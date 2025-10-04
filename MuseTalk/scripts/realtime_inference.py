@@ -41,7 +41,9 @@ WHISPER_DIR = str(PROJECT_ROOT / "models" / "whisper")
 INFERENCE_CONFIG_PATH = str(PROJECT_ROOT / "configs" / "inference" / "realtime.yaml")
 RESULTS_PATH = str(PROJECT_ROOT / "results")
 
+# --- Initialize Global Objects (Consider managing these within a class) ---
 args = None
+vae = None
 
 def fast_check_ffmpeg():
     try:
@@ -76,12 +78,11 @@ class Avatar:
         self.avatar_id = avatar_id
         self.video_path = video_path
         self.bbox_shift = bbox_shift
-        self.version = args.version
-        self.extra_margin = args.extra_margin
+        self.args = args
 
         # 根据版本设置不同的基础路径
-        if self.version == "v15":
-            self.base_path = f"./MuseTalk/results/{self.version}/avatars/{avatar_id}"
+        if self.args.version == "v15":
+            self.base_path = f"./MuseTalk/results/{self.args.version}/avatars/{avatar_id}"
         else:  # v1
             self.base_path = f"./MuseTalk/results/avatars/{avatar_id}"
             
@@ -97,7 +98,7 @@ class Avatar:
             "avatar_id": avatar_id,
             "video_path": video_path,
             "bbox_shift": bbox_shift,
-            "version": self.version
+            "version": self.args.version
         }
         self.preparation = preparation
         self.batch_size = batch_size
@@ -192,8 +193,8 @@ class Avatar:
             if bbox == coord_placeholder:
                 continue
             x1, y1, x2, y2 = bbox
-            if self.version == "v15":
-                y2 = y2 + self.extra_margin
+            if self.args.version == "v15":
+                y2 = y2 + self.args.extra_margin
                 y2 = min(y2, frame.shape[0])
                 coord_list[idx] = [x1, y1, x2, y2]  # 更新coord_list中的bbox
             crop_frame = frame[y1:y2, x1:x2]
@@ -211,8 +212,8 @@ class Avatar:
             cv2.imwrite(f"{self.full_imgs_path}/{str(i).zfill(8)}.png", frame)
 
             x1, y1, x2, y2 = self.coord_list_cycle[i]
-            if self.version == "v15":
-                mode = args.parsing_mode
+            if self.args.version == "v15":
+                mode = self.args.parsing_mode
             else:
                 mode = "raw"
             mask, crop_box = get_image_prepare_material(frame, [x1, y1, x2, y2], fp=fp, mode=mode)
@@ -391,6 +392,11 @@ def run_musetalk_inference(
 
     try:
 
+        """Initializes global objects and configurations, checking for required API keys."""
+        global args, vae
+        args = None
+        vae = None
+
         all_params = locals()
 
         args = types.SimpleNamespace(**all_params)
@@ -510,99 +516,99 @@ if __name__ == "__main__":
     '''
     This script is used to simulate online chatting and applies necessary pre-processing such as face detection and face parsing in advance. During online chatting, only UNet and the VAE decoder are involved, which makes MuseTalk real-time.
     '''
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--version", type=str, default="v15", choices=["v1", "v15"], help="Version of MuseTalk: v1 or v15")
-    parser.add_argument("--ffmpeg_path", type=str, default="./ffmpeg-4.4-amd64-static/", help="Path to ffmpeg executable")
-    parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID to use")
-    parser.add_argument("--vae_type", type=str, default="sd-vae", help="Type of VAE model")
-    parser.add_argument("--unet_config", type=str, default="./models/musetalk/musetalk.json", help="Path to UNet configuration file")
-    parser.add_argument("--unet_model_path", type=str, default="./models/musetalk/pytorch_model.bin", help="Path to UNet model weights")
-    parser.add_argument("--whisper_dir", type=str, default="./models/whisper", help="Directory containing Whisper model")
-    parser.add_argument("--inference_config", type=str, default="configs/inference/realtime.yaml")
-    parser.add_argument("--bbox_shift", type=int, default=0, help="Bounding box shift value")
-    parser.add_argument("--result_dir", default='./results', help="Directory for output results")
-    parser.add_argument("--extra_margin", type=int, default=10, help="Extra margin for face cropping")
-    parser.add_argument("--fps", type=int, default=25, help="Video frames per second")
-    parser.add_argument("--audio_padding_length_left", type=int, default=2, help="Left padding length for audio")
-    parser.add_argument("--audio_padding_length_right", type=int, default=2, help="Right padding length for audio")
-    parser.add_argument("--batch_size", type=int, default=20, help="Batch size for inference")
-    parser.add_argument("--output_vid_name", type=str, default=None, help="Name of output video file")
-    parser.add_argument("--use_saved_coord", action="store_true", help='Use saved coordinates to save time')
-    parser.add_argument("--saved_coord", action="store_true", help='Save coordinates for future use')
-    parser.add_argument("--parsing_mode", default='jaw', help="Face blending parsing mode")
-    parser.add_argument("--left_cheek_width", type=int, default=90, help="Width of left cheek region")
-    parser.add_argument("--right_cheek_width", type=int, default=90, help="Width of right cheek region")
-    parser.add_argument("--skip_save_images",
-                       action="store_true",
-                       help="Whether skip saving images for better generation speed calculation",
-                       )
-
-    args = parser.parse_args()
-
-    # Configure ffmpeg path
-    if not fast_check_ffmpeg():
-        print("Adding ffmpeg to PATH")
-        # Choose path separator based on operating system
-        path_separator = ';' if sys.platform == 'win32' else ':'
-        os.environ["PATH"] = f"{args.ffmpeg_path}{path_separator}{os.environ['PATH']}"
-        if not fast_check_ffmpeg():
-            print("Warning: Unable to find ffmpeg, please ensure ffmpeg is properly installed")
-
-    # Set computing device
-    device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
-
-    # Load model weights
-    vae, unet, pe = load_all_model(
-        unet_model_path=args.unet_model_path,
-        vae_type=args.vae_type,
-        unet_config=args.unet_config,
-        device=device
-    )
-    timesteps = torch.tensor([0], device=device)
-
-    pe = pe.half().to(device)
-    vae.vae = vae.vae.half().to(device)
-    unet.model = unet.model.half().to(device)
-
-    # Initialize audio processor and Whisper model
-    audio_processor = AudioProcessor(feature_extractor_path=args.whisper_dir)
-    weight_dtype = unet.model.dtype
-    whisper = WhisperModel.from_pretrained(args.whisper_dir)
-    whisper = whisper.to(device=device, dtype=weight_dtype).eval()
-    whisper.requires_grad_(False)
-
-    # Initialize face parser with configurable parameters based on version
-    if args.version == "v15":
-        fp = FaceParsing(
-            left_cheek_width=args.left_cheek_width,
-            right_cheek_width=args.right_cheek_width
-        )
-    else:  # v1
-        fp = FaceParsing()
-
-    inference_config = OmegaConf.load(args.inference_config)
-    print(inference_config)
-
-    for avatar_id in inference_config:
-        data_preparation = inference_config[avatar_id]["preparation"]
-        video_path = inference_config[avatar_id]["video_path"]
-        if args.version == "v15":
-            bbox_shift = 0
-        else:
-            bbox_shift = inference_config[avatar_id]["bbox_shift"]
-        avatar = Avatar(
-            version=args.version,
-            avatar_id=avatar_id,
-            video_path=video_path,
-            bbox_shift=bbox_shift,
-            batch_size=args.batch_size,
-            preparation=data_preparation)
-
-        audio_clips = inference_config[avatar_id]["audio_clips"]
-        for audio_num, audio_path in audio_clips.items():
-            print("Inferring using:", audio_path)
-            avatar.inference(audio_path,
-                           audio_num,
-                           args.fps,
-                           args.skip_save_images)
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--version", type=str, default="v15", choices=["v1", "v15"], help="Version of MuseTalk: v1 or v15")
+    # parser.add_argument("--ffmpeg_path", type=str, default="./ffmpeg-4.4-amd64-static/", help="Path to ffmpeg executable")
+    # parser.add_argument("--gpu_id", type=int, default=0, help="GPU ID to use")
+    # parser.add_argument("--vae_type", type=str, default="sd-vae", help="Type of VAE model")
+    # parser.add_argument("--unet_config", type=str, default="./models/musetalk/musetalk.json", help="Path to UNet configuration file")
+    # parser.add_argument("--unet_model_path", type=str, default="./models/musetalk/pytorch_model.bin", help="Path to UNet model weights")
+    # parser.add_argument("--whisper_dir", type=str, default="./models/whisper", help="Directory containing Whisper model")
+    # parser.add_argument("--inference_config", type=str, default="configs/inference/realtime.yaml")
+    # parser.add_argument("--bbox_shift", type=int, default=0, help="Bounding box shift value")
+    # parser.add_argument("--result_dir", default='./results', help="Directory for output results")
+    # parser.add_argument("--extra_margin", type=int, default=10, help="Extra margin for face cropping")
+    # parser.add_argument("--fps", type=int, default=25, help="Video frames per second")
+    # parser.add_argument("--audio_padding_length_left", type=int, default=2, help="Left padding length for audio")
+    # parser.add_argument("--audio_padding_length_right", type=int, default=2, help="Right padding length for audio")
+    # parser.add_argument("--batch_size", type=int, default=20, help="Batch size for inference")
+    # parser.add_argument("--output_vid_name", type=str, default=None, help="Name of output video file")
+    # parser.add_argument("--use_saved_coord", action="store_true", help='Use saved coordinates to save time')
+    # parser.add_argument("--saved_coord", action="store_true", help='Save coordinates for future use')
+    # parser.add_argument("--parsing_mode", default='jaw', help="Face blending parsing mode")
+    # parser.add_argument("--left_cheek_width", type=int, default=90, help="Width of left cheek region")
+    # parser.add_argument("--right_cheek_width", type=int, default=90, help="Width of right cheek region")
+    # parser.add_argument("--skip_save_images",
+    #                    action="store_true",
+    #                    help="Whether skip saving images for better generation speed calculation",
+    #                    )
+    #
+    # args = parser.parse_args()
+    #
+    # # Configure ffmpeg path
+    # if not fast_check_ffmpeg():
+    #     print("Adding ffmpeg to PATH")
+    #     # Choose path separator based on operating system
+    #     path_separator = ';' if sys.platform == 'win32' else ':'
+    #     os.environ["PATH"] = f"{args.ffmpeg_path}{path_separator}{os.environ['PATH']}"
+    #     if not fast_check_ffmpeg():
+    #         print("Warning: Unable to find ffmpeg, please ensure ffmpeg is properly installed")
+    #
+    # # Set computing device
+    # device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
+    #
+    # # Load model weights
+    # vae, unet, pe = load_all_model(
+    #     unet_model_path=args.unet_model_path,
+    #     vae_type=args.vae_type,
+    #     unet_config=args.unet_config,
+    #     device=device
+    # )
+    # timesteps = torch.tensor([0], device=device)
+    #
+    # pe = pe.half().to(device)
+    # vae.vae = vae.vae.half().to(device)
+    # unet.model = unet.model.half().to(device)
+    #
+    # # Initialize audio processor and Whisper model
+    # audio_processor = AudioProcessor(feature_extractor_path=args.whisper_dir)
+    # weight_dtype = unet.model.dtype
+    # whisper = WhisperModel.from_pretrained(args.whisper_dir)
+    # whisper = whisper.to(device=device, dtype=weight_dtype).eval()
+    # whisper.requires_grad_(False)
+    #
+    # # Initialize face parser with configurable parameters based on version
+    # if args.version == "v15":
+    #     fp = FaceParsing(
+    #         left_cheek_width=args.left_cheek_width,
+    #         right_cheek_width=args.right_cheek_width
+    #     )
+    # else:  # v1
+    #     fp = FaceParsing()
+    #
+    # inference_config = OmegaConf.load(args.inference_config)
+    # print(inference_config)
+    #
+    # for avatar_id in inference_config:
+    #     data_preparation = inference_config[avatar_id]["preparation"]
+    #     video_path = inference_config[avatar_id]["video_path"]
+    #     if args.version == "v15":
+    #         bbox_shift = 0
+    #     else:
+    #         bbox_shift = inference_config[avatar_id]["bbox_shift"]
+    #     avatar = Avatar(
+    #         version=args.version,
+    #         avatar_id=avatar_id,
+    #         video_path=video_path,
+    #         bbox_shift=bbox_shift,
+    #         batch_size=args.batch_size,
+    #         preparation=data_preparation)
+    #
+    #     audio_clips = inference_config[avatar_id]["audio_clips"]
+    #     for audio_num, audio_path in audio_clips.items():
+    #         print("Inferring using:", audio_path)
+    #         avatar.inference(audio_path,
+    #                        audio_num,
+    #                        args.fps,
+    #                        args.skip_save_images)
