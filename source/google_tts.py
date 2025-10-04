@@ -457,7 +457,12 @@ class GCPTextToSpeechManager:
         """
         # Check if the text contains a speaker label pattern
         is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
-        
+
+        logger.info(f"Print text_content: {text_content}")
+        logger.info(f"Print individual_audios: {individual_audios}")
+
+        logger.info(f"Print is_podcast_script: {is_podcast_script}")
+
         if is_podcast_script:
             if individual_audios:
                 logger.info("Detected podcast script format. Using multi-voice synthesis with individual audios.")
