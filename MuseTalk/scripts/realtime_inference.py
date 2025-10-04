@@ -191,7 +191,7 @@ class Avatar:
             if bbox == coord_placeholder:
                 continue
             x1, y1, x2, y2 = bbox
-            if args.version == "v15":
+            if self.version == "v15":
                 y2 = y2 + args.extra_margin
                 y2 = min(y2, frame.shape[0])
                 coord_list[idx] = [x1, y1, x2, y2]  # 更新coord_list中的bbox
@@ -210,7 +210,7 @@ class Avatar:
             cv2.imwrite(f"{self.full_imgs_path}/{str(i).zfill(8)}.png", frame)
 
             x1, y1, x2, y2 = self.coord_list_cycle[i]
-            if args.version == "v15":
+            if self.version == "v15":
                 mode = args.parsing_mode
             else:
                 mode = "raw"

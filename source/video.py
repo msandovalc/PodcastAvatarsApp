@@ -857,7 +857,7 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
                             processed_clips[original_index] = processed_clip_path
                             duration = get_video_duration(processed_clip_path)
                             if duration > 0:
-                                total_duration += duration  # Solo aquí se suma
+                                total_duration += duration
                                 logging.info(
                                     f"Processed and stored clip at index {original_index}: {processed_clip_path}, duration: {duration:.2f}s")
                             else:

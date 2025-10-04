@@ -493,19 +493,21 @@ def create_podcast():
 
             try:
                 print("[INFO] Starting MuseTalk inference from class method...")
-                results_list = run_musetalk_inference()
-                print(f"[INFO] Inference finished successfully from class method.{results_list}")
+                video_paths = run_musetalk_inference()
+                print(f"[INFO] Inference finished successfully from class method.{video_paths}")
 
             except Exception as e:
                 print(f"[ERROR] Inference failed in class: {e}")
                 raise
 
-            # combine_start = time.time()
-            # combined_video_path = combine_videos(video_paths=video_paths, max_duration=temp_audio.duration,
-            #                                      max_clip_duration=max_clip_duration, threads=n_threads)
-            # combine_end = time.time()
-            # logging.info(
-            #     f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
+            combine_start = time.time()
+            output_paths = [r["output_path"] for r in video_paths]
+
+            combined_video_path = combine_videos(video_paths=output_paths, max_duration=temp_audio.duration,
+                                                 max_clip_duration=max_clip_duration, threads=n_threads)
+            combine_end = time.time()
+            logging.info(
+                f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
 
 
 
