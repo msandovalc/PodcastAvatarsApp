@@ -44,7 +44,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMP_DIR = BASE_DIR / "audiobook_content" / "temp"
 SUBTITLES_DIR = BASE_DIR / "audiobook_content" / "subtitles"
 
-
 # Get device
 if torch.cuda.is_available():
     device = "cuda"
@@ -136,7 +135,6 @@ def generate_ffmpeg_command(image_path: str, output_path: str, duration: float, 
         output_size = '1920x1080'
         final_width, final_height = 1920, 1080
 
-
         x_center, y_center = 'iw/2', 'ih/2'
 
         # command = ['ffmpeg', '-y', "-fflags", "+genpts", "-err_detect", "ignore_err", '-loop', '1',
@@ -213,7 +211,6 @@ def generate_ffmpeg_command(image_path: str, output_path: str, duration: float, 
         else:
             raise ValueError(
                 f"Invalid effect type: {effect}. Supported effects are 'zoom_in', 'zoom_out', 'fade_in', 'fade_out', 'smoothleft', 'smoothright', 'vertopen', 'vertclose'.")
-
 
         # Final encoding settings
         command = (base_cmd + [
@@ -412,7 +409,8 @@ def __generate_subtitles_locally(sentences: List[str], audio_clips: List[AudioFi
     return "\n".join(subtitles)
 
 
-def generate_subtitles(audio_path: str, sentences: List[str] = None, audio_clips: List[AudioFileClip] = None, voice: str ="es") -> str:
+def generate_subtitles(audio_path: str, sentences: List[str] = None, audio_clips: List[AudioFileClip] = None,
+                       voice: str = "es") -> str:
     """
     Generates subtitles from a given audio file and returns the path to the subtitles.
 
@@ -628,20 +626,27 @@ def process_single_video(video_path: str, req_dur: float, max_duration: int) -> 
         # Set final resolution
         final_width, final_height = 1080, 1920
 
-        # Build FFmpeg command
         command = base_cmd + [
             "-fflags", "+genpts", "-err_detect", "ignore_err",
             "-i", video_path,
-            "-t", str(req_dur),
-            "-force_key_frames", f"expr:gte(t,n_forced*{req_dur})",
-            "-vf", f"crop={crop_width}:{crop_height}:{crop_x}:{crop_y},fps=30,scale={final_width}:{final_height}",
-        ] + codec_cmd + [
-                      "-preset", "fast",
-                      "-r", "30",
-                      "-bufsize", "10M",
-                      "-an",  # remove audio
-                      temp_clip_path
-                  ]
+        ]
+
+        if req_dur is not None:
+            command += [
+                "-t", str(req_dur),
+                "-force_key_frames", f"expr:gte(t,n_forced*{req_dur})",
+            ]
+        # Build FFmpeg command
+        command += [
+                       "-vf",
+                       f"crop={crop_width}:{crop_height}:{crop_x}:{crop_y},fps=30,scale={final_width}:{final_height}",
+                   ] + codec_cmd + [
+                       "-preset", "fast",
+                       "-r", "30",
+                       "-bufsize", "10M",
+                       "-an",  # remove audio
+                       temp_clip_path
+                   ]
 
         logging.info(f"Running FFmpeg: {' '.join(command)}")
         subprocess.run(command, check=True)
@@ -673,9 +678,9 @@ def process_single_video(video_path: str, req_dur: float, max_duration: int) -> 
 
 
 def process_single_video_one_element(
-    video_path: str,
-    req_dur: float,
-    show_progress: bool = False
+        video_path: str,
+        req_dur: float,
+        show_progress: bool = False
 ) -> Optional[str]:
     """
     Processes a single video: resizes and loops to the required duration for a YouTube format.
@@ -714,12 +719,12 @@ def process_single_video_one_element(
             # The `-vf` now only includes scaling to the new dimensions
             "-vf", f"scale={final_width}:{final_height},fps=30",
         ] + codec_cmd + [
-            "-preset", "fast",
-            "-r", "30",
-            "-bufsize", "10M",
-            "-an",  # remove audio
-            temp_clip_path
-        ]
+                      "-preset", "fast",
+                      "-r", "30",
+                      "-bufsize", "10M",
+                      "-an",  # remove audio
+                      temp_clip_path
+                  ]
 
         # Add the progress pipe for reading output if enabled
         if show_progress:
@@ -727,18 +732,18 @@ def process_single_video_one_element(
 
         logging.info(f"Executing FFmpeg command: {' '.join(command)}")
         start_time = time.time()
-        
+
         if show_progress:
-            bar_length = 30 # Define the length of the progress bar
-            
+            bar_length = 30  # Define the length of the progress bar
+
             # Use Popen to read the output in real-time
             with subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # Merge stdout and stderr
-                text=True,
-                bufsize=1,
-                universal_newlines=True
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,  # Merge stdout and stderr
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
             ) as process:
                 for line in process.stdout:
                     # Use a regex to find the `out_time_ms` value in the progress output
@@ -746,26 +751,26 @@ def process_single_video_one_element(
                     if match:
                         elapsed_ms = int(match.group(1))
                         elapsed_seconds = elapsed_ms / 1000000.0
-                        
+
                         if req_dur > 0:
                             progress_percent = min(100.0, (elapsed_seconds / req_dur) * 100.0)
-                            
+
                             # Calculate the number of filled and empty characters
                             filled_chars = int(bar_length * progress_percent // 100)
                             empty_chars = bar_length - filled_chars
-                            
+
                             # Create the progress bar string
                             progress_bar = "Progress [" + "█" * filled_chars + " " * empty_chars + "]"
-                            
+
                             # Print the progress on the same line, overwriting the previous one
                             print(f"\r{progress_bar} {progress_percent:.2f}%", end="")
-                            sys.stdout.flush() 
+                            sys.stdout.flush()
 
                 process.wait()
-                
+
                 # Print a final newline and a success message
                 print("\rProgress [██████████████████████████████] 100.00% - Process completed successfully!")
-                print() 
+                print()
 
                 if process.returncode != 0:
                     raise subprocess.CalledProcessError(process.returncode, process.args)
@@ -804,7 +809,148 @@ def process_single_video_one_element(
     return None
 
 
-def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration: int, threads: int = 2) -> str:
+# def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration: int, threads: int = 2) -> str:
+#     """
+#     Combines a list of videos into one video using FFmpeg's concat demuxer.
+#
+#     Args:
+#         video_paths (List[str]): A list of paths to the videos to combine.
+#         max_duration (int): The maximum duration of the combined video in seconds.
+#         max_clip_duration (int): The maximum duration to consider from each input clip in seconds.
+#         threads (int): The maximum number of concurrent threads to use for processing individual clips.
+#
+#     Returns:
+#         str: The path to the combined video, or an empty string if an error occurred.
+#     """
+#
+#     combined_video_path = str(TEMP_DIR / f"{uuid.uuid4()}.mp4")
+#     logging.info(
+#         f"Combining videos. Output path: {combined_video_path}, Max duration: {max_duration}s, Max clip duration: {max_clip_duration}s, Threads: {threads}")
+#
+#     valid_video_paths = [os.path.normpath(path) for path in video_paths if
+#                          isinstance(path, str) and path.lower().endswith(
+#                              (".mp4", ".avi", ".mov", ".mkv")) and os.path.exists(path)]
+#
+#     if not valid_video_paths:
+#         logging.error("Error: No valid video files found to combine.")
+#         return ""
+#
+#     num_videos = len(valid_video_paths)
+#     req_dur = max_duration / num_videos if num_videos > 0 else 0
+#     logging.info(f"Number of valid videos: {num_videos}, Required duration per clip: {req_dur:.2f}s")
+#
+#     processed_clips = [None] * num_videos  # Pre-allocate list to store results in order
+#     futures_with_indices = []
+#
+#     total_duration = 0
+#
+#     with concurrent.futures.ThreadPoolExecutor(max_workers=min(2, threads)) as executor:
+#         for i, video_path in enumerate(valid_video_paths):
+#             clip_duration_to_process = min(req_dur, max_clip_duration)
+#             future = executor.submit(process_single_video, video_path, clip_duration_to_process, max_duration)
+#             futures_with_indices.append((i, future))
+#
+#         completed_futures = concurrent.futures.as_completed(dict(futures_with_indices).values())
+#         futures_dict = dict(futures_with_indices)  # Create a dictionary for quick lookup
+#
+#         for future in completed_futures:
+#             for original_index, f in futures_with_indices:
+#                 if f is future:
+#                     try:
+#                         processed_clip_path = future.result()
+#                         if processed_clip_path:
+#                             processed_clips[original_index] = processed_clip_path
+#                             duration = get_video_duration(processed_clip_path)
+#                             if duration > 0:
+#                                 total_duration += duration
+#                                 logging.info(
+#                                     f"Processed and stored clip at index {original_index}: {processed_clip_path}, duration: {duration:.2f}s")
+#                             else:
+#                                 logging.warning(
+#                                     f"Could not determine duration of processed clip at index {original_index}: {processed_clip_path}")
+#                         else:
+#                             logging.warning(f"Processing for video at index {original_index} failed.")
+#                     except Exception as e:
+#                         logging.error(f"Exception during video processing for index {original_index}: {e}")
+#                     break
+#
+#     logging.info(f"Final combined video duration: {total_duration:.2f}s")
+#
+#     final_processed_clips = [clip for clip in processed_clips if clip is not None]
+#
+#     logging.info(f"Generated file list for final_processed_clips: {len(final_processed_clips)}")
+#
+#     if not final_processed_clips:
+#         logging.error("Error: No processed video clips to combine.")
+#         return ""
+#
+#     # Create a file list for FFmpeg's concat demuxer
+#     file_list_path = str(TEMP_DIR / "file_list.txt")
+#
+#     try:
+#         with open(file_list_path, "w", encoding="utf-8") as f:
+#             for clip_path in final_processed_clips:
+#                 f.write(f"file '{clip_path}'\n")
+#
+#         logging.info(f"Generated file list for concatenation: {file_list_path}")
+#
+#         # Build FFmpeg command to concatenate clips listed in 'file_list_path'
+#         ffmpeg_cmd = (
+#                 base_cmd + [
+#             "-fflags", "+genpts",
+#             "-err_detect", "ignore_err",
+#             "-f", "concat",
+#             "-safe", "0",
+#             "-i", file_list_path
+#         ] +
+#                 codec_cmd + [
+#                     "-preset", "fast",
+#                     "-cq:v", "19",
+#                     "-pix_fmt", "yuv420p",
+#                     combined_video_path
+#                 ]
+#         )
+#
+#         logging.info(f"Executing final FFmpeg command for combining videos: {ffmpeg_cmd}")
+#         subprocess.run(ffmpeg_cmd, check=True)
+#         logging.info(f"Successfully combined videos at: {combined_video_path}")
+#
+#         # # Clean up temporary processed clips
+#         # for clip_path in processed_clips:
+#         #     try:
+#         #         os.remove(clip_path)
+#         #         logging.debug(f"Removed temporary clip: {clip_path}")
+#         #     except OSError as e:
+#         #         logging.warning(f"Could not remove temporary clip {clip_path}: {e}")
+#         try:
+#             os.remove(file_list_path)
+#             logging.debug(f"Removed temporary file list: {file_list_path}")
+#         except OSError as e:
+#             logging.warning(f"Could not remove temporary file list {file_list_path}: {e}")
+#
+#         final_duration = get_video_duration(combined_video_path)
+#         logging.info(f"Final combined video duration: {final_duration:.2f} seconds")
+#
+#         return combined_video_path
+#
+#     except FileNotFoundError:
+#         logging.error("Error: FFmpeg not found. Ensure it's installed and in your PATH.")
+#         return ""
+#     except subprocess.CalledProcessError as e:
+#         logging.error(f"FFmpeg error during video concatenation: {e}")
+#         return ""
+#     except Exception as e:
+#         logging.error(f"An unexpected error occurred during video combination: {e}")
+#         return ""
+#     finally:
+#         gc.collect()
+
+
+def combine_videos(video_paths: List[str],
+                   max_duration: int,
+                   max_clip_duration: int,
+                   threads: int = 2,
+                   consider_duration: bool = True) -> str:
     """
     Combines a list of videos into one video using FFmpeg's concat demuxer.
 
@@ -813,6 +959,7 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
         max_duration (int): The maximum duration of the combined video in seconds.
         max_clip_duration (int): The maximum duration to consider from each input clip in seconds.
         threads (int): The maximum number of concurrent threads to use for processing individual clips.
+        consider_duration (bool): Whether to consider max_duration and max_clip_duration in processing.
 
     Returns:
         str: The path to the combined video, or an empty string if an error occurred.
@@ -820,7 +967,10 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
 
     combined_video_path = str(TEMP_DIR / f"{uuid.uuid4()}.mp4")
     logging.info(
-        f"Combining videos. Output path: {combined_video_path}, Max duration: {max_duration}s, Max clip duration: {max_clip_duration}s, Threads: {threads}")
+        f"Combining videos. Output path: {combined_video_path}, "
+        f"Max duration: {max_duration}s, Max clip duration: {max_clip_duration}s, "
+        f"Threads: {threads}, Consider duration: {consider_duration}"
+    )
 
     valid_video_paths = [os.path.normpath(path) for path in video_paths if
                          isinstance(path, str) and path.lower().endswith(
@@ -831,8 +981,13 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
         return ""
 
     num_videos = len(valid_video_paths)
-    req_dur = max_duration / num_videos if num_videos > 0 else 0
-    logging.info(f"Number of valid videos: {num_videos}, Required duration per clip: {req_dur:.2f}s")
+
+    if consider_duration:
+        req_dur = max_duration / num_videos if num_videos > 0 else 0
+        logging.info(f"Number of valid videos: {num_videos}, Required duration per clip: {req_dur:.2f}s")
+    else:
+        req_dur = None
+        logging.info(f"Number of valid videos: {num_videos}, Duration calculations are skipped.")
 
     processed_clips = [None] * num_videos  # Pre-allocate list to store results in order
     futures_with_indices = []
@@ -841,8 +996,9 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(2, threads)) as executor:
         for i, video_path in enumerate(valid_video_paths):
-            clip_duration_to_process = min(req_dur, max_clip_duration)
-            future = executor.submit(process_single_video, video_path, clip_duration_to_process, max_duration)
+            clip_duration_to_process = min(req_dur, max_clip_duration) if consider_duration else None
+            future = executor.submit(process_single_video, video_path, clip_duration_to_process,
+                                     max_duration if consider_duration else None)
             futures_with_indices.append((i, future))
 
         completed_futures = concurrent.futures.as_completed(dict(futures_with_indices).values())
@@ -855,21 +1011,23 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
                         processed_clip_path = future.result()
                         if processed_clip_path:
                             processed_clips[original_index] = processed_clip_path
-                            duration = get_video_duration(processed_clip_path)
-                            if duration > 0:
-                                total_duration += duration
-                                logging.info(
-                                    f"Processed and stored clip at index {original_index}: {processed_clip_path}, duration: {duration:.2f}s")
-                            else:
-                                logging.warning(
-                                    f"Could not determine duration of processed clip at index {original_index}: {processed_clip_path}")
+                            if consider_duration:
+                                duration = get_video_duration(processed_clip_path)
+                                if duration > 0:
+                                    total_duration += duration
+                                    logging.info(
+                                        f"Processed and stored clip at index {original_index}: {processed_clip_path}, duration: {duration:.2f}s")
+                                else:
+                                    logging.warning(
+                                        f"Could not determine duration of processed clip at index {original_index}: {processed_clip_path}")
                         else:
                             logging.warning(f"Processing for video at index {original_index} failed.")
                     except Exception as e:
                         logging.error(f"Exception during video processing for index {original_index}: {e}")
                     break
 
-    logging.info(f"Final combined video duration: {total_duration:.2f}s")
+    if consider_duration:
+        logging.info(f"Final combined video duration: {total_duration:.2f}s")
 
     final_processed_clips = [clip for clip in processed_clips if clip is not None]
 
@@ -910,13 +1068,6 @@ def combine_videos(video_paths: List[str], max_duration: int, max_clip_duration:
         subprocess.run(ffmpeg_cmd, check=True)
         logging.info(f"Successfully combined videos at: {combined_video_path}")
 
-        # # Clean up temporary processed clips
-        # for clip_path in processed_clips:
-        #     try:
-        #         os.remove(clip_path)
-        #         logging.debug(f"Removed temporary clip: {clip_path}")
-        #     except OSError as e:
-        #         logging.warning(f"Could not remove temporary clip {clip_path}: {e}")
         try:
             os.remove(file_list_path)
             logging.debug(f"Removed temporary file list: {file_list_path}")
@@ -986,11 +1137,11 @@ def create_video_from_images(image_folder, audio_path, threads: int) -> []:
 
 
 def create_video_from_images_ffmpeg(
-    image_path: str,
-    req_dur: float,
-    effect: str,
-    threads: int,
-    show_progress: bool = False
+        image_path: str,
+        req_dur: float,
+        effect: str,
+        threads: int,
+        show_progress: bool = False
 ) -> Optional[str]:
     """
     Creates a short video clip from a single image using FFmpeg, applying a specified visual effect.
@@ -1017,7 +1168,7 @@ def create_video_from_images_ffmpeg(
 
     # Generate FFmpeg command with or without the progress flag
     ffmpeg_command = generate_ffmpeg_command(image_path, video_path, req_dur, effect)
-    
+
     if show_progress:
         # Add the progress pipe for reading output
         ffmpeg_command.extend(["-progress", "pipe:1"])
@@ -1028,19 +1179,19 @@ def create_video_from_images_ffmpeg(
 
     logging.info(f"Executing FFmpeg command: {' '.join(ffmpeg_command)}")
     start_time = time.time()
-    
+
     try:
         if show_progress:
             bar_length = 30  # Define the length of the progress bar
-            
+
             # Use Popen to read the output in real-time
             with subprocess.Popen(
-                ffmpeg_command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,  # Merge stdout and stderr
-                text=True,
-                bufsize=1,
-                universal_newlines=True
+                    ffmpeg_command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,  # Merge stdout and stderr
+                    text=True,
+                    bufsize=1,
+                    universal_newlines=True
             ) as process:
                 for line in process.stdout:
                     # Use a regex to find the `out_time_ms` value in the progress output
@@ -1048,26 +1199,26 @@ def create_video_from_images_ffmpeg(
                     if match:
                         elapsed_ms = int(match.group(1))
                         elapsed_seconds = elapsed_ms / 1000000.0
-                        
+
                         if req_dur > 0:
                             progress_percent = min(100.0, (elapsed_seconds / req_dur) * 100.0)
-                            
+
                             # Calculate the number of filled and empty characters
                             filled_chars = int(bar_length * progress_percent // 100)
                             empty_chars = bar_length - filled_chars
-                            
+
                             # Create the progress bar string
                             progress_bar = "Progress [" + "█" * filled_chars + " " * empty_chars + "]"
-                            
+
                             # Print the progress on the same line, overwriting the previous one
                             print(f"\r{progress_bar} {progress_percent:.2f}%", end="")
-                            sys.stdout.flush() 
+                            sys.stdout.flush()
 
                 process.wait()
-                
+
                 # Print a final newline and a success message
                 print("\rProgress [██████████████████████████████] 100.00% - Process completed successfully!")
-                print() 
+                print()
 
                 if process.returncode != 0:
                     # If there's an error, FFmpeg will return a non-zero code
@@ -1275,10 +1426,11 @@ def generate_video(combined_video_path: str, tts_path: str, subtitles_path: str,
 
     return output_temp_folder
 
+
 def generate_video_custom(combined_video_path: str, tts_path: str, music_path: str, threads: int,
-                   subtitles_path: str = None, subtitles_position: str = "center,center",
-                   cover_image_path: str = None, end_image_path: str = None,
-                   logo_path: str = None, show_progress: bool = False) -> str:
+                          subtitles_path: str = None, subtitles_position: str = "center,center",
+                          cover_image_path: str = None, end_image_path: str = None,
+                          logo_path: str = None, show_progress: bool = False) -> str:
     """
     Generates the final video by optionally adding audio, subtitles, cover image, end image, and logo.
     Includes an option to show a progress bar by streaming FFmpeg's output.
@@ -1320,15 +1472,15 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
     inputs = [
         "-r", "30",
         "-i", combined_video_path,  # Input 0: Video
-        "-i", tts_path,             # Input 1: TTS (voice-over)
-        "-i", music_path,           # Input 2: Background music
+        "-i", tts_path,  # Input 1: TTS (voice-over)
+        "-i", music_path,  # Input 2: Background music
     ]
     filter_parts = []
     current_input_index = 3
 
     # Start the video filter chain. This stream label will be used for all subsequent video filters.
     output_video_stream = "[video_with_filters]"
-    
+
     # Scale the base video to 1920x1080 for YouTube and set the correct aspect ratio
     filter_parts.append("[0:v]scale=1920:1080,setsar=1:1[base_video]")
     last_video_stream = "[base_video]"
@@ -1337,15 +1489,18 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
     if cover_image_path and os.path.exists(cover_image_path):
         inputs.extend(["-i", cover_image_path])
         filter_parts.append(f"[{current_input_index}:v]scale=1920:1080[img_scaled]")
-        filter_parts.append(f"[{last_video_stream}][img_scaled]overlay=0:0:enable='lte(t,{fade_in_duration})'{output_video_stream}")
+        filter_parts.append(
+            f"[{last_video_stream}][img_scaled]overlay=0:0:enable='lte(t,{fade_in_duration})'{output_video_stream}")
         last_video_stream = output_video_stream
         current_input_index += 1
-    
+
     if end_image_path and os.path.exists(end_image_path):
         inputs.extend(["-i", end_image_path])
         filter_parts.append(f"[{current_input_index}:v]scale=1920:1080[end_image_scaled]")
-        filter_parts.append(f"[{last_video_stream}]fade=t=out:st={video_duration - 0.5}:d={fade_out_duration}[final_out]")
-        filter_parts.append(f"[final_out][end_image_scaled]overlay=0:0:enable='gte(t,{video_duration - 0.5})'{output_video_stream}")
+        filter_parts.append(
+            f"[{last_video_stream}]fade=t=out:st={video_duration - 0.5}:d={fade_out_duration}[final_out]")
+        filter_parts.append(
+            f"[final_out][end_image_scaled]overlay=0:0:enable='gte(t,{video_duration - 0.5})'{output_video_stream}")
         last_video_stream = output_video_stream
         current_input_index += 1
 
@@ -1363,10 +1518,10 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
         filter_parts.append(logo_overlay_filter)
         last_video_stream = output_video_stream
         current_input_index += 1
-    
+
     if subtitles_path and os.path.exists(subtitles_path):
         formatted_subtitles_path = subtitles_path.replace("\\", "/").replace(":", "\\:")
-        
+
         # Mapping from human-readable position to FFmpeg alignment value
         alignment_map = {
             "center,center": "5",
@@ -1378,7 +1533,7 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
             "right,top": "9"
         }
         alignment = alignment_map.get(subtitles_position.lower(), "5")
-        
+
         force_style = (
             "FontName=Candara-Bold,FontSize=12,PrimaryColour=&H00FFFFFF,"
             f"BorderStyle=1,Outline=1,Alignment={alignment},MarginV=100"
@@ -1386,7 +1541,7 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
         subtitles_filter = f"[{last_video_stream}]subtitles='{formatted_subtitles_path}':force_style='{force_style}'{output_video_stream}"
         filter_parts.append(subtitles_filter)
         last_video_stream = output_video_stream
-    
+
     # Audio mixing filter
     filter_parts.append("[1:a]volume=1.0[voice_over]")
     filter_parts.append("[2:a]volume=0.2[background_music]")
@@ -1397,18 +1552,18 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
 
     # Build the final command
     command = (
-        base_cmd + inputs +
-        ["-threads", str(threads)] +
-        ["-filter_complex", filter_complex] +
-        ["-map", last_video_stream] +  # Use the last valid video stream
-        ["-map", "[audio_mix]"] +
-        codec_cmd + [
-            "-preset", "fast",
-            "-crf", "23",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            output_temp_folder
-        ]
+            base_cmd + inputs +
+            ["-threads", str(threads)] +
+            ["-filter_complex", filter_complex] +
+            ["-map", last_video_stream] +  # Use the last valid video stream
+            ["-map", "[audio_mix]"] +
+            codec_cmd + [
+                "-preset", "fast",
+                "-crf", "23",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                output_temp_folder
+            ]
     )
 
     if show_progress:
@@ -1419,34 +1574,35 @@ def generate_video_custom(combined_video_path: str, tts_path: str, music_path: s
     # Execute the command and track progress if enabled
     try:
         if show_progress:
-            bar_length = 30 # Define the length of the progress bar
-            with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True,
-                          encoding='utf-8', errors='replace') as process:
+            bar_length = 30  # Define the length of the progress bar
+            with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+                                  universal_newlines=True,
+                                  encoding='utf-8', errors='replace') as process:
                 for line in process.stdout:
                     match = re.search(r"out_time_ms=(\d+)", line)
                     if match:
                         elapsed_ms = int(match.group(1))
                         elapsed_seconds = elapsed_ms / 1000000
-                        
+
                         if video_duration > 0:
                             progress_percent = min(100, (elapsed_seconds / video_duration) * 100)
-                            
+
                             # Calculate the number of filled and empty characters
                             filled_chars = int(bar_length * progress_percent // 100)
                             empty_chars = bar_length - filled_chars
-                            
+
                             # Create the progress bar string
                             progress_bar = "Progress [" + "█" * filled_chars + " " * empty_chars + "]"
-                            
+
                             # Print the progress on the same line, overwriting the previous one
                             print(f"\r{progress_bar} {progress_percent:.2f}%", end="")
-                            sys.stdout.flush() 
+                            sys.stdout.flush()
 
                 process.wait()
-                
+
                 # Print a final newline and a success message
                 print("\rProgress [██████████████████████████████] 100.00% - ¡Process completed succesfully!")
-                print() 
+                print()
 
                 if process.returncode != 0:
                     raise subprocess.CalledProcessError(process.returncode, process.args)
@@ -1473,22 +1629,26 @@ if __name__ == "__main__":
     audio_clip = Path(__file__).resolve().parent.parent / "temp" / "6a4abc75-507d-43cb-910a-b40334faa07a.mp3"
     audio_path = Path(__file__).resolve().parent.parent / "temp" / "b47c88f1-bd2d-444d-a46a-402a44d16282.mp3"
 
-
     output_path = str(TEMP_DIR / f"{uuid4()}.mp3")
     combined_video_path = str(
-        Path(__file__).resolve().parent.parent / "audiobook_content" / "temp" / "ed71fc4b-e5da-4587-b5d8-8b945de39283_1755370194516.mp4")
+        Path(
+            __file__).resolve().parent.parent / "audiobook_content" / "temp" / "ed71fc4b-e5da-4587-b5d8-8b945de39283_1755370194516.mp4")
     image_folder = Path(__file__).resolve().parent.parent / "audiobook_content" / "images"
     tts_path = str(
         Path(__file__).resolve().parent.parent / "audiobook_content" / "audio" / "Capitulo_1_MI_HISTORIA.mp3")
     image_path = str(Path(__file__).resolve().parent.parent / "audiobook_content" / "images" / "atomic_habits.png")
     subtitles_path = str(
-        Path(__file__).resolve().parent.parent / "audiobook_content" / "temp" / "e5fb9605-cc28-4160-ab77-0b9546ff08c1.srt")
+        Path(
+            __file__).resolve().parent.parent / "audiobook_content" / "temp" / "e5fb9605-cc28-4160-ab77-0b9546ff08c1.srt")
     cover_image_path = str(Path(
         __file__).resolve().parent.parent / "audiobook_content" / "cover" / "image_content_front.png")
-    image_back_path = str(Path(__file__).resolve().parent.parent / "audiobook_content" / "cover" / "image_content_back_text.png")
-    image_logo_path = str(Path(__file__).resolve().parent.parent / "audiobook_content" / "cover" / "image_logo_content.png")
+    image_back_path = str(
+        Path(__file__).resolve().parent.parent / "audiobook_content" / "cover" / "image_content_back_text.png")
+    image_logo_path = str(
+        Path(__file__).resolve().parent.parent / "audiobook_content" / "cover" / "image_logo_content.png")
     music_path = str(
-        Path(__file__).resolve().parent.parent / "audiobook_content" / "music" / "432Hz_postive_energy_break_chains_and_emotions.mp3")
+        Path(
+            __file__).resolve().parent.parent / "audiobook_content" / "music" / "432Hz_postive_energy_break_chains_and_emotions.mp3")
 
     # Verifica si la carpeta existe. Si no, la crea.
     if not os.path.exists(TEMP_DIR):
@@ -1540,4 +1700,3 @@ if __name__ == "__main__":
     #                                   end_image_path=image_back_path, logo_path=image_logo_path,
     #                                   music_path=music_path, threads=n_threads,
     #                                   subtitles_position=subtitles_position, text_color=text_color)
-
