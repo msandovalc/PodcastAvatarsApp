@@ -80,9 +80,9 @@ class Avatar:
 
         # 根据版本设置不同的基础路径
         if self.version == "v15":
-            self.base_path = f"./results/{self.version}/avatars/{avatar_id}"
+            self.base_path = f"./MuseTalk/results/{self.version}/avatars/{avatar_id}"
         else:  # v1
-            self.base_path = f"./results/avatars/{avatar_id}"
+            self.base_path = f"./MuseTalk/results/avatars/{avatar_id}"
             
         self.avatar_path = self.base_path
         self.full_imgs_path = f"{self.avatar_path}/full_imgs"
