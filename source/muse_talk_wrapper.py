@@ -92,14 +92,14 @@ class MuseTalkConfigManager:
                     self.config[avatar_key] = {
                         "preparation": preparation,
                         "bbox_shift": bbox_shift,
-                        "video_path": f"\"{video_path}\"",  # wrap in quotes
+                        "video_path": str(video_path),
                         "audio_clips": {}
                     }
 
                 # Append audio preserving order
                 audio_clips = self.config[avatar_key]["audio_clips"]
                 clip_index = len(audio_clips)
-                audio_clips[f"audio_{clip_index}"] = f"\"{audio_path}\""  # wrap in quotes
+                audio_clips[f"audio_{clip_index}"] = str(audio_path)
 
             # === Step 3: Save updated YAML ===
             with open(output_yaml, "w", encoding="utf-8") as f:
