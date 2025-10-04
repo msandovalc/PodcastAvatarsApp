@@ -452,13 +452,8 @@ def create_podcast():
 
             try:
                 print("[INFO] Starting MuseTalk inference from class method...")
-                # results_list = run_musetalk_inference()
-                results_list = inferense_v2()
-
-
-                print("[INFO] Inference finished successfully from class method.")
-
-
+                results_list = run_musetalk_inference()
+                print(f"[INFO] Inference finished successfully from class method.{results_list}")
 
             except Exception as e:
                 print(f"[ERROR] Inference failed in class: {e}")
@@ -670,24 +665,22 @@ if __name__ == "__main__":
     n_threads = psutil.cpu_count(logical=True)
     print(f"Your system can use {n_threads} threads based on available CPU resources.")
 
-    logging.info("Starting the video generation process.")
-    # initialize_directories()
-    #
-    # if not initialize_app():
-    #     print(colored("[-] Failed to initialize the application. Check logs for errors.", "red"))
-    #     exit(1)
-
     try:
-        print("[INFO] Starting MuseTalk inference from class method...")
-        results_list = run_musetalk_inference()
-        results_list = inferense_v2()
 
-        print(f"[INFO] Inference finished successfully from class method.: {results_list}")
+        logging.info("Starting the video generation process.")
+        initialize_directories()
 
+        if not initialize_app():
+            print(colored("[-] Failed to initialize the application. Check logs for errors.", "red"))
+            exit(1)
 
+        create_podcast()
+
+        # print("[INFO] Starting MuseTalk inference from class method...")
+        # results_list = run_musetalk_inference()
+        # results_list = inferense_v2()
+        # print(f"[INFO] Inference finished successfully from class method.: {results_list}")
 
     except Exception as e:
         print(f"[ERROR] Inference failed in class: {e}")
         raise
-
-    # create_audiobook()
