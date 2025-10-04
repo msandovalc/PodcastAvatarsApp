@@ -336,9 +336,9 @@ class Avatar:
             print(f"self.video_out_path: {self.video_out_path}")
             print(f"out_vid_name: {out_vid_name}")
             print(f"output_vid: {output_vid}")
-            print(f"device: {torch_device}")
+            print(f"device: {device}")
 
-            if torch_device == "cuda":
+            if device == "cuda":
                 print(f"[INFO] Using GPU")
                 cmd_img2video = (
                     f"ffmpeg -y -v warning -hwaccel cuda "
