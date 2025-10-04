@@ -436,8 +436,8 @@ def run_musetalk_inference(
                 print("[WARNING] ffmpeg not found. Make sure it's installed and path is correct.")
 
         # --- Set computing device ---
-        torch_device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-        print(f"[INFO] Using device: {torch_device}")
+        device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+        print(f"[INFO] Using device: {device}")
 
         # --- Load UNet and VAE models ---
         print("[INFO] Loading UNet and VAE models...")
