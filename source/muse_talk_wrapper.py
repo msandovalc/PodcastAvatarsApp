@@ -52,6 +52,20 @@ class MuseTalkConfigManager:
         Paths for video_path and audio_clips are always wrapped in double quotes.
         """
         try:
+            # === Step 1: Clear YAML / config ===
+            if hasattr(self, "config") and isinstance(self.config, dict):
+                logger.info("Clearing existing YAML configuration...")
+                self.config.clear()
+            else:
+                self.config = {}
+
+            # Ensure the YAML file itself is also cleared (truncate)
+            if Path(output_yaml).exists():
+                with open(output_yaml, "w", encoding="utf-8") as f:
+                    f.truncate(0)
+                logger.info(f"YAML file content cleared: {output_yaml}")
+
+            # === Step 2: Process new segments ===
             for segment in segments:
                 speaker = segment.get("speaker")
                 audio_path = segment.get("audio_path")
@@ -87,7 +101,7 @@ class MuseTalkConfigManager:
                 clip_index = len(audio_clips)
                 audio_clips[f"audio_{clip_index}"] = f"\"{audio_path}\""  # wrap in quotes
 
-            # Dump YAML normally (no representer hacks)
+            # === Step 3: Save updated YAML ===
             with open(output_yaml, "w", encoding="utf-8") as f:
                 yaml.dump(self.config, f, sort_keys=False, allow_unicode=True)
 
