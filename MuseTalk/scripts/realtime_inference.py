@@ -44,6 +44,7 @@ RESULTS_PATH = str(PROJECT_ROOT / "results")
 # --- Initialize Global Objects (Consider managing these within a class) ---
 args = None
 vae = None
+fp = None
 
 def fast_check_ffmpeg():
     try:
@@ -393,9 +394,10 @@ def run_musetalk_inference(
     try:
 
         """Initializes global objects and configurations, checking for required API keys."""
-        global args, vae
+        global args, vae, fp
         args = None
         vae = None
+        fp = None
 
         all_params = locals()
 

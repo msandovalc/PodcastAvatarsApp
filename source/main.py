@@ -505,8 +505,8 @@ def create_podcast():
 
             logger.info(colored(text=f"[+] Video combination path: {output_paths}", color="green"))
 
-            combined_video_path = combine_videos(video_paths=output_paths, max_duration=temp_audio.duration,
-                                                 max_clip_duration=max_clip_duration, threads=n_threads)
+            combined_video_path = combine_videos(video_paths=output_paths, max_duration=0,
+                                                 max_clip_duration=0, threads=n_threads)
             combine_end = time.time()
             logging.info(
                 f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
