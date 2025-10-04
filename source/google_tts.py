@@ -245,7 +245,7 @@ class GCPTextToSpeechManager:
                 "voice_name": voice_name
             })
 
-        logger.info(f"Print conversation_list: {conversation_list}")
+        # logger.info(f"Print conversation_list: {conversation_list}")
 
         return conversation_list
 
@@ -351,7 +351,7 @@ class GCPTextToSpeechManager:
                 # Append dict with speaker info and path
                 segment_paths.append({
                     "speaker": speaker,
-                    "path": segment_path
+                    "audio_path": segment_path
                 })
 
             return segment_paths

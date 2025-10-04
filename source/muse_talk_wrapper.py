@@ -12,6 +12,12 @@ logger = setup_logger(__name__)
 dotenv_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=dotenv_path)
 
+# Get the project root (adjust according to your repo structure)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+VIDEO_PATH = str(PROJECT_ROOT / "MuseTalk" / "data" / "video"/ "yongen.mp4")
+YAML_PATH = str(PROJECT_ROOT / "MuseTalk" / "configs" / "inference"/ "realtime.yaml")
+
 class MuseTalkConfigManager:
     """
     Manager for MuseTalk inference YAML configurations.
@@ -35,23 +41,11 @@ class MuseTalkConfigManager:
             logger.error(f"Failed to load YAML: {e}")
             raise
 
-    import yaml
-    from pathlib import Path
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    import yaml
-    from pathlib import Path
-    import logging
-
-    logger = logging.getLogger(__name__)
-
     def update_avatar_audio_clips_from_segments(self, segments: list[dict],
                                                 preparation: bool = True,
                                                 bbox_shift: int = 5,
-                                                video_path: str = "data/video/yongen.mp4",
-                                                output_yaml: str = "inference.yaml"):
+                                                video_path: str = VIDEO_PATH,
+                                                output_yaml: str = YAML_PATH):
         """
         Updates MuseTalk YAML avatars automatically based on podcast segments.
 

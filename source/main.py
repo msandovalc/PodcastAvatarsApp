@@ -14,7 +14,7 @@ from utils import *
 # from youtube import *
 # from OpusClipApp import *
 # from instagram_api import InstagramAPI
-# from video import *
+from video import *
 
 from muse_talk_wrapper import *
 from MuseTalk.scripts.realtime_inference import run_musetalk_inference
@@ -440,8 +440,49 @@ def create_podcast():
             #
             # script = f"{introduction}\n\n{chapter_text}\n\n{reflection}"
 
-            audio_paths = process_and_generate_audio(chapter_data=chapter, chapter_text=chapter_text,
-                                                    audio_output_path=local_audio_path)
+            # audio_paths = process_and_generate_audio(chapter_data=chapter, chapter_text=chapter_text,
+            #                                         audio_output_path=local_audio_path)
+
+            audio_paths = [
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_1.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_2.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_3.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_4.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_5.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_6.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_7.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_8.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_9.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_10.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_11.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_13.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_14.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_15.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_16.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_17.wav'},
+                {'speaker': 'Speaker 2',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 2_segment_18.wav'},
+                {'speaker': 'Speaker 1',
+                 'audio_path': '/kaggle/working/PodcastAvatarsApp/podcast_content/audio/Hábitos Atómicos en el deporte/Speaker 1_segment_19.wav'}
+            ]
+
+
             if not audio_paths:
                 logging.error("TTS processing failed. Skipping video generation for this topic.")
                 return
@@ -458,6 +499,16 @@ def create_podcast():
             except Exception as e:
                 print(f"[ERROR] Inference failed in class: {e}")
                 raise
+
+            # combine_start = time.time()
+            # combined_video_path = combine_videos(video_paths=video_paths, max_duration=temp_audio.duration,
+            #                                      max_clip_duration=max_clip_duration, threads=n_threads)
+            # combine_end = time.time()
+            # logging.info(
+            #     f"Video combination took {combine_end - combine_start:.2f} seconds. Combined video path: {combined_video_path}")
+
+
+
 
             #
             # temp_audio = AudioFileClip(audio_path)

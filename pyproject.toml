@@ -41,8 +41,12 @@ mmengine = "*"
 mmdet = "*"
 
 # --- Libraries with Range or Minimum Version Constraints ---
-moviepy = ">=1.0.3"
+moviepy = "==1.0.3"
+srt-equalizer = ">=0.1.10,<0.2.0"
+assemblyai = ">=0.43.1,<0.44.0"
+ffmpeg = ">=1.4,<2.0"
 ffmpeg-python = ">=0.2.0"
+clip = ">=0.2.0,<0.3.0"
 numpy = ">=1.26"
 opencv-python = ">=4.10"
 pandas = ">=2.3.2,<3.0.0"
