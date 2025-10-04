@@ -51,6 +51,7 @@ weight_dtype = None
 whisper = None
 pe = None
 unet = None
+timesteps = None
 
 def fast_check_ffmpeg():
     try:
@@ -400,7 +401,7 @@ def run_musetalk_inference(
     try:
 
         """Initializes global objects and configurations, checking for required API keys."""
-        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet
+        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet, timesteps
         args = None
         vae = None
         fp = None
@@ -410,6 +411,7 @@ def run_musetalk_inference(
         whisper = None
         pe = None
         unet = None
+        timesteps = None
 
         all_params = locals()
 
