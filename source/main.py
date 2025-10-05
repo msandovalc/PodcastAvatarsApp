@@ -37,6 +37,7 @@ AUDIO_DIR = PODCAST_DIR / "audio"
 SUBTITLES_DIR = PODCAST_DIR / "subtitles"
 TRANSCRIPT_DIR = PODCAST_DIR / "transcriptions"
 ANALYSES_DIR = PODCAST_DIR / "analyses"
+AVATARS_DIR = PODCAST_DIR / "avatars"
 EXCEL_FILE_DIR = PODCAST_DIR / "docs" / "video_podcast_content.xlsx"
 CLIENT_SECRETS_FILE = BASE_DIR / "credentials" / "client_secret_471046779868-8ocft10nuip214911m6cpul8no9urcrg.apps.googleusercontent.com.json"
 MUSETALK_CONFIG_PATH = BASE_DIR / "MuseTalk" / "configs" / "inference" / "realtime.yaml"
@@ -487,8 +488,18 @@ def create_podcast():
                 logging.error("TTS processing failed. Skipping video generation for this topic.")
                 return
 
+
+            "/kaggle/working/PodcastAvatarsApp/podcast_content/avatars/dreamina-2025-07-28-2156.mp4"
+
+            "/kaggle/working/PodcastAvatarsApp/podcast_content/avatars/model_v10.mp4"
+
             manager = MuseTalkConfigManager(str(MUSETALK_CONFIG_PATH))
-            manager.update_avatar_audio_clips_from_segments(audio_paths, preparation=True)
+            manager.update_avatar_audio_clips_from_segments(segments=audio_paths,
+                                                            preparation=True,
+                                                            video_avatar_1_path=str(AVATARS_DIR / "dreamina-2025-07-28-2156.mp4"),
+                                                            video_avatar_2_path=str(AVATARS_DIR / "model_v10.mp4"),
+                                                            )
+
             manager.save_yaml()  # Overwrites original YAML
 
             try:

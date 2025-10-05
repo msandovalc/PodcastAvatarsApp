@@ -44,7 +44,8 @@ class MuseTalkConfigManager:
     def update_avatar_audio_clips_from_segments(self, segments: list[dict],
                                                 preparation: bool = True,
                                                 bbox_shift: int = 5,
-                                                video_path: str = VIDEO_PATH,
+                                                video_avatar_1_path: str = VIDEO_PATH,
+                                                video_avatar_2_path: str = VIDEO_PATH,
                                                 output_yaml: str = YAML_PATH):
         """
         Updates MuseTalk YAML avatars automatically based on podcast segments.
@@ -87,12 +88,28 @@ class MuseTalkConfigManager:
                 speaker_num = ''.join(c for c in speaker_str if c.isdigit()) or "1"
                 avatar_key = f"avator_{speaker_num}"
 
-                # Init avatar if missing
+                # --- Conditional Video Path Selection ---
+
+                # 1. Determine the required video path based on the avatar_key
+                if avatar_key == "avator_1":
+                    # Use video path for Speaker 1
+                    selected_video_path = str(video_avatar_1_path)
+
+                elif avatar_key == "avator_2":
+                    # Use video path for Speaker 2
+                    # Ensure 'video_avatar_2_path' is defined in the calling scope
+                    selected_video_path = str(video_avatar_2_path)
+
+                else:
+                    # Use default path for any other avator (e.g., avator_3, etc.)
+                    selected_video_path = str(video_avatar_1_path)
+
+                # Normalize speaker to avator_X key (e.g., "Speaker 1" -> "avator_1")
                 if avatar_key not in self.config:
                     self.config[avatar_key] = {
                         "preparation": preparation,
                         "bbox_shift": bbox_shift,
-                        "video_path": str(video_path),
+                        "video_path": selected_video_path,
                         "audio_clips": {}
                     }
 
