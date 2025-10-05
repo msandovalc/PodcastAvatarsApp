@@ -466,7 +466,7 @@ def musetalk_inference_reloaded(
             avatar_cfg = inference_config[avatar_id]
 
             avatar = Avatar(
-                args=types.SimpleNamespace(version=version),
+                args=CONFIG,
                 avatar_id=avatar_id,
                 video_path=avatar_cfg["video_path"],
                 bbox_shift=avatar_cfg.get("bbox_shift", 0),
