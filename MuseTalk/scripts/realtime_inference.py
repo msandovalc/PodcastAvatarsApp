@@ -479,13 +479,23 @@ def musetalk_inference_reloaded(
             logging.info(f"[INFO] Processing avatar {avatar_idx}/{len(inference_config)}: {avatar_id}")
             avatar_cfg = inference_config[avatar_id]
 
+            avatar_args = types.SimpleNamespace(
+                version=version,
+                extra_margin=CONFIG.extra_margin,
+                left_cheek_width=CONFIG.left_cheek_width,
+                right_cheek_width=CONFIG.right_cheek_width,
+                audio_padding_length_left=CONFIG.audio_padding_length_left,
+                audio_padding_length_right=CONFIG.audio_padding_length_right,
+            )
+
             avatar = Avatar(
                 args=CONFIG,
                 avatar_id=avatar_id,
                 video_path=avatar_cfg["video_path"],
                 bbox_shift=avatar_cfg.get("bbox_shift", 0),
                 batch_size=batch_size,
-                preparation=avatar_cfg["preparation"]
+                preparation=avatar_cfg["preparation"],
+                vae=vae
             )
 
             # Iterate over audio clips

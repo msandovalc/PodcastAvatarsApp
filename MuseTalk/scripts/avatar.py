@@ -36,7 +36,7 @@ class Avatar:
         preparation (bool): If True, prepares avatar materials, else loads existing
     """
 
-    def __init__(self, args, avatar_id, video_path, bbox_shift, batch_size, preparation):
+    def __init__(self, args, avatar_id, video_path, bbox_shift, batch_size, preparation, vae):
         try:
             self.avatar_id = avatar_id
             self.video_path = video_path
@@ -44,6 +44,7 @@ class Avatar:
             self.args = args
             self.batch_size = batch_size
             self.preparation = preparation
+            self.vae = vae
             self.idx = 0
 
             # Paths
@@ -195,7 +196,7 @@ class Avatar:
                 resized_crop_frame = cv2.resize(crop_frame, (256, 256), interpolation=cv2.INTER_LANCZOS4)
 
                 # Encode cropped frame to latent space
-                latents = vae.get_latents_for_unet(resized_crop_frame)
+                latents = self.vae.get_latents_for_unet(resized_crop_frame)
                 input_latent_list.append(latents)
 
             # --- Step 5: Create cycles for animation ---

@@ -499,7 +499,8 @@ def create_podcast():
 
             try:
                 print("[INFO] Starting MuseTalk inference from class method...")
-                video_paths = musetalk_inference_reloaded()
+                video_paths = run_musetalk_inference()
+                # video_paths = musetalk_inference_reloaded()
                 print(f"[INFO] Inference finished successfully from class method.{video_paths}")
 
             except Exception as e:
