@@ -29,6 +29,17 @@ import subprocess
 from pathlib import Path
 import types
 
+import logging
+from .avatar import Avatar
+from .utils_ffmpeg import FFmpegUtils
+from .exceptions import ModelNotFoundError, InferenceError
+# from .models import load_all_model, AudioProcessor, WhisperModel
+from .config import CONFIG
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
 # Get the project root (adjust according to your repo structure)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -52,6 +63,7 @@ whisper = None
 pe = None
 unet = None
 timesteps = None
+
 
 def fast_check_ffmpeg():
     try:
@@ -381,6 +393,104 @@ class Avatar:
             return output_vid
 
         print("\n")
+
+
+def musetalk_inference_reloaded(
+        version=CONFIG.version,
+        gpu_id=CONFIG.gpu_id,
+        batch_size=CONFIG.batch_size,
+        fps=CONFIG.fps,
+        ffmpeg_path=CONFIG.ffmpeg_path,
+        unet_config=CONFIG.unet_config,
+        unet_model_path=CONFIG.unet_model_path,
+        whisper_dir=CONFIG.whisper_dir,
+        skip_save_images=CONFIG.skip_save_images
+):
+    """
+    Run MuseTalk inference on all avatars and audio clips defined in the inference configuration.
+
+    Args:
+        version (str): MuseTalk version to use (e.g., 'v15').
+        gpu_id (int): GPU device ID to use for processing.
+        batch_size (int): Batch size for frame processing.
+        fps (int): Frames per second for output video.
+        ffmpeg_path (str): Path to the FFmpeg executable.
+        unet_config (str): Path to UNet configuration file.
+        unet_model_path (str): Path to the UNet model weights.
+        whisper_dir (str): Path to Whisper feature extractor / model.
+        skip_save_images (bool): If True, skip saving intermediate images.
+
+    Returns:
+        List[dict]: A list of dictionaries containing avatar_id, output video path, and original audio path.
+
+    Raises:
+        InferenceError: If any step of the inference process fails.
+    """
+    try:
+        logging.info("[INFO] Ensuring FFmpeg is available...")
+        FFmpegUtils.ensure_ffmpeg_in_path(str(ffmpeg_path))
+
+        device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+        logging.info(f"[INFO] Using device: {device}")
+
+        # Load UNet and VAE models
+        if not os.path.isfile(unet_config) or not os.path.isfile(unet_model_path):
+            raise ModelNotFoundError("UNet config or model file not found.")
+
+        logging.info("[INFO] Loading models...")
+        vae, unet, pe = load_all_model(
+            unet_model_path=unet_model_path,
+            vae_type=CONFIG.vae_type,
+            unet_config=unet_config,
+            device=device
+        )
+        pe = pe.half().to(device)
+        vae.vae = vae.vae.half().to(device)
+        unet.model = unet.model.half().to(device)
+        timesteps = torch.tensor([0], device=device)
+
+        # Load audio processing models
+        audio_processor = AudioProcessor(feature_extractor_path=whisper_dir)
+        whisper = WhisperModel.from_pretrained(whisper_dir).to(device=device).eval()
+        whisper.requires_grad_(False)
+
+        # Load inference configuration
+        logging.info("[INFO] Loading inference configuration...")
+        inference_config = OmegaConf.load(CONFIG.configs_dir / "inference/realtime.yaml")
+
+        results = []
+
+        # Iterate over avatars
+        for avatar_idx, avatar_id in enumerate(inference_config, 1):
+            logging.info(f"[INFO] Processing avatar {avatar_idx}/{len(inference_config)}: {avatar_id}")
+            avatar_cfg = inference_config[avatar_id]
+
+            avatar = Avatar(
+                args=types.SimpleNamespace(version=version),
+                avatar_id=avatar_id,
+                video_path=avatar_cfg["video_path"],
+                bbox_shift=avatar_cfg.get("bbox_shift", 0),
+                batch_size=batch_size,
+                preparation=avatar_cfg["preparation"]
+            )
+
+            # Iterate over audio clips
+            for audio_num, audio_path in avatar_cfg["audio_clips"].items():
+                logging.info(f"[INFO] Running inference for audio clip: {audio_num}")
+                out_vid = avatar.inference(audio_path, audio_num, fps, skip_save_images)
+                results.append({
+                    "avatar_id": avatar_id,
+                    "output_path": out_vid,
+                    "original_audio": audio_path
+                })
+                logging.info(f"[INFO] Finished inference for audio clip: {audio_num}")
+
+        logging.info("[INFO] All inferences completed successfully.")
+        return results
+
+    except Exception as e:
+        logging.error(f"[ERROR] Inference failed: {e}")
+        raise InferenceError(str(e))
 
 
 def run_musetalk_inference(
