@@ -131,35 +131,113 @@ class Avatar:
 
     def prepare_material(self):
         """
-        Prepare avatar materials: extract frames, copy images, extract landmarks and bounding boxes.
+        Prepare all the materials required for avatar animation.
+
+        This method performs the following steps:
+        1. Saves avatar metadata as JSON.
+        2. Extracts frames from a video or copies existing PNG images.
+        3. Extracts facial landmarks and bounding boxes.
+        4. Applies extra margin (for v15 version).
+        5. Generates latent representations of cropped faces.
+        6. Creates and saves facial masks and bounding boxes.
+        7. Saves all intermediate data (coords, masks, latents).
+
+        Raises:
+            Exception: If any step fails, the error will be logged and re-raised.
         """
         try:
             logging.info(f"[INFO] Preparing materials for avatar: {self.avatar_id}")
+
+            # --- Step 1: Save avatar metadata ---
             import json
             with open(self.avatar_info_path, "w") as f:
                 json.dump(self.avatar_info, f)
+            logging.info(f"[OK] Saved avatar info to {self.avatar_info_path}")
 
-            # Video/images
+            # --- Step 2: Extract or copy images ---
             if os.path.isfile(self.video_path):
-                video2imgs(self.video_path, self.full_imgs_path)
+                logging.info(f"[INFO] Extracting frames from video: {self.video_path}")
+                video2imgs(self.video_path, self.full_imgs_path, ext='png')
             else:
+                logging.info(f"[INFO] Copying existing PNG images from folder: {self.video_path}")
                 files = sorted([f for f in os.listdir(self.video_path) if f.endswith('.png')])
                 for f in files:
-                    shutil.copyfile(os.path.join(self.video_path, f), os.path.join(self.full_imgs_path, f))
+                    shutil.copyfile(os.path.join(self.video_path, f),
+                                    os.path.join(self.full_imgs_path, f))
 
-            # Landmarks
-            coord_list, frame_list = get_landmark_and_bbox(
-                sorted(glob.glob(os.path.join(self.full_imgs_path, '*.[jpJP][pnPN]*[gG]'))),
-                self.bbox_shift
-            )
-            self.input_latent_list_cycle = []
+            # --- Step 3: Extract landmarks and bounding boxes ---
+            logging.info("[INFO] Extracting facial landmarks and bounding boxes...")
+            input_img_list = sorted(glob.glob(os.path.join(self.full_imgs_path, '*.[jpJP][pnPN]*[gG]')))
+            coord_list, frame_list = get_landmark_and_bbox(input_img_list, self.bbox_shift)
+
+            # --- Initialize storage lists ---
+            input_latent_list = []
+            coord_placeholder = (0.0, 0.0, 0.0, 0.0)
+
+            # --- Step 4: Process each frame ---
+            idx = -1
+            for bbox, frame in zip(coord_list, frame_list):
+                idx += 1
+                if bbox == coord_placeholder:
+                    continue
+
+                x1, y1, x2, y2 = bbox
+
+                # Apply extra margin if version v15
+                if hasattr(self.args, "version") and self.args.version == "v15":
+                    if hasattr(self.args, "extra_margin"):
+                        y2 = y2 + self.args.extra_margin
+                        y2 = min(y2, frame.shape[0])
+                        coord_list[idx] = [x1, y1, x2, y2]
+
+                # Crop and resize frame
+                crop_frame = frame[y1:y2, x1:x2]
+                resized_crop_frame = cv2.resize(crop_frame, (256, 256), interpolation=cv2.INTER_LANCZOS4)
+
+                # Encode cropped frame to latent space
+                latents = vae.get_latents_for_unet(resized_crop_frame)
+                input_latent_list.append(latents)
+
+            # --- Step 5: Create cycles for animation ---
             self.frame_list_cycle = frame_list + frame_list[::-1]
             self.coord_list_cycle = coord_list + coord_list[::-1]
-            self.mask_list_cycle = []
+            self.input_latent_list_cycle = input_latent_list + input_latent_list[::-1]
             self.mask_coords_list_cycle = []
+            self.mask_list_cycle = []
 
-            logging.info(f"[INFO] Materials prepared for avatar: {self.avatar_id}")
+            logging.info(f"[OK] Processed {len(frame_list)} frames successfully.")
+
+            # --- Step 6: Generate and save masks ---
+            logging.info("[INFO] Generating facial masks...")
+            for i, frame in enumerate(tqdm(self.frame_list_cycle, desc="Generating masks")):
+                cv2.imwrite(f"{self.full_imgs_path}/{str(i).zfill(8)}.png", frame)
+
+                x1, y1, x2, y2 = self.coord_list_cycle[i]
+                if hasattr(self.args, "version") and self.args.version == "v15":
+                    mode = getattr(self.args, "parsing_mode", "raw")
+                else:
+                    mode = "raw"
+
+                mask, crop_box = get_image_prepare_material(frame, [x1, y1, x2, y2], fp=fp, mode=mode)
+
+                cv2.imwrite(f"{self.mask_out_path}/{str(i).zfill(8)}.png", mask)
+                self.mask_coords_list_cycle.append(crop_box)
+                self.mask_list_cycle.append(mask)
+
+            # --- Step 7: Save data for reuse ---
+            logging.info("[INFO] Saving coordinates, masks and latents...")
+
+            with open(self.mask_coords_path, 'wb') as f:
+                pickle.dump(self.mask_coords_list_cycle, f)
+
+            with open(self.coords_path, 'wb') as f:
+                pickle.dump(self.coord_list_cycle, f)
+
+            torch.save(self.input_latent_list_cycle, os.path.join(self.latents_out_path))
+
+            logging.info(f"[SUCCESS] Materials prepared successfully for avatar: {self.avatar_id}")
 
         except Exception as e:
-            logging.error(f"[ERROR] Failed to prepare materials for {self.avatar_id}: {e}")
+            logging.critical(f"[CRITICAL] Failed to prepare materials for {self.avatar_id}: {e}", exc_info=True)
             raise
+

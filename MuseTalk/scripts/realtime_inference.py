@@ -427,6 +427,20 @@ def musetalk_inference_reloaded(
         InferenceError: If any step of the inference process fails.
     """
     try:
+
+        """Initializes global objects and configurations, checking for required API keys."""
+        global args, vae, fp, audio_processor, device, weight_dtype, whisper, pe, unet, timesteps
+        args = None
+        vae = None
+        fp = None
+        audio_processor = None
+        device = None
+        weight_dtype = None
+        whisper = None
+        pe = None
+        unet = None
+        timesteps = None
+
         logging.info("[INFO] Ensuring FFmpeg is available...")
         FFmpegUtils.ensure_ffmpeg_in_path(str(ffmpeg_path))
 
