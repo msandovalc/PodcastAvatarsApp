@@ -78,9 +78,9 @@ CHANNELS = {
 
 # --- Constants for Directory Paths ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-BOOK_DIR = BASE_DIR / "audiobook_content"
+BOOK_DIR = BASE_DIR / "podcast_content"
 OUTPUT_DIR = BOOK_DIR / "output"
-EXCEL_FILE_PATH = BOOK_DIR / "docs" / "video_content.xlsx"
+EXCEL_FILE_PATH = BOOK_DIR / "docs" / "video_podcast_content.xlsx"
 IMG_DIR = BOOK_DIR / "images"
 CREDENTIALS_DIR = BASE_DIR / "credentials"
 
@@ -743,7 +743,7 @@ def bulk_upload_reels():
     youtube_uploader = YouTubeUploader(client_secret_file=CLIENT_SECRET_FILE, channels=CHANNELS)
 
     # Example: authenticate one channel
-    youtube, channel_id = youtube_uploader.get_authenticated_service_by_channel("Panuel: La Voz del Audiolibro")
+    youtube, channel_id = youtube_uploader.get_authenticated_service_by_channel("Mente de Campeón: El Poder de Tu Pensamiento")
     if youtube:
         print(f"✅ Channel ready: {channel_id}")
 
