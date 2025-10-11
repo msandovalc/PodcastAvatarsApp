@@ -53,6 +53,8 @@ pandas = ">=2.3.2,<3.0.0"
 psutil = ">=7.1.0,<8.0.0"
 termcolor = ">=3.1.0,<4.0.0"
 
+cloudinary = ">=1.44.1,<2.0.0"
+
 # --- LangChain and Google API Dependencies (Specific Ranges) ---
 langchain = ">=0.3.27,<0.4.0"
 langchain-google-genai = ">=2.1.12,<3.0.0"
