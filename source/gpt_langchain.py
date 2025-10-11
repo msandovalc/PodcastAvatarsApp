@@ -356,14 +356,11 @@ class ContentGenerator:
         """
         try:
             prompt_text = custom_prompt or """
-                Generate a catchy and engaging hook text for a video cover.
-                The hook should be brief, intriguing, and directly related to the subject of the video.
-                The tone should be attention-grabbing and make the viewer curious to watch the video.
+                Generate a high-conversion, click-optimized hook text designed for a video thumbnail or cover (akin to a title/caption).
+                The hook must employ strong FOMO (Fear Of Missing Out) tactics, create a dramatic knowledge gap, and be structured to capture Attention, build Interest, and drive Desire (AIDA).
+                The final text must be brief (under 12 words) and directly reveal the consequence of not knowing the secret.
                 Do not include any unnecessary introductions, only focus on the hook text itself.
-                The hook must be related to the video subject and should not be longer than 1-2 sentences.
-                Example: "Discover the secret to effortless success in just 5 minutes a day!"
                 YOU MUST NOT INCLUDE ANY TYPE OF MARKDOWN OR FORMATTING IN THE HOOK. NEVER USE A TITLE OR ANY INTRODUCTORY TEXT.
-                DO NOT MENTION THE PROMPT OR THE SUBJECT. JUST WRITE THE HOOK.
                 DO NOT INCLUDE EMOTICONS
                 Language: {voice}
                 Subject: {video_subject}

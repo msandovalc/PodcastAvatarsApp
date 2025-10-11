@@ -474,19 +474,19 @@ def musetalk_inference_reloaded(
 
         results = []
 
+        # --- Initialize face parser ---
+        if version == "v15":
+            fp = FaceParsing(left_cheek_width=CONFIG.left_cheek_width, right_cheek_width=CONFIG.right_cheek_width)
+        else:
+            fp = FaceParsing()
+        print(f"[INFO] Face parser initialized with version {version}.")
+
+        # --- Run inference for each avatar ---
+
         # Iterate over avatars
         for avatar_idx, avatar_id in enumerate(inference_config, 1):
             logging.info(f"[INFO] Processing avatar {avatar_idx}/{len(inference_config)}: {avatar_id}")
             avatar_cfg = inference_config[avatar_id]
-
-            avatar_args = types.SimpleNamespace(
-                version=version,
-                extra_margin=CONFIG.extra_margin,
-                left_cheek_width=CONFIG.left_cheek_width,
-                right_cheek_width=CONFIG.right_cheek_width,
-                audio_padding_length_left=CONFIG.audio_padding_length_left,
-                audio_padding_length_right=CONFIG.audio_padding_length_right,
-            )
 
             avatar = Avatar(
                 args=CONFIG,
@@ -495,7 +495,8 @@ def musetalk_inference_reloaded(
                 bbox_shift=avatar_cfg.get("bbox_shift", 0),
                 batch_size=batch_size,
                 preparation=avatar_cfg["preparation"],
-                vae=vae
+                vae=vae,
+                fp=fp
             )
 
             # Iterate over audio clips
@@ -627,6 +628,8 @@ def run_musetalk_inference(
         print(f"[INFO] Face parser initialized with version {version}.")
 
         # --- Run inference for each avatar ---
+        all_results = []
+
         for avatar_id in inference_config:
             data_preparation = inference_config[avatar_id]["preparation"]
             video_path = inference_config[avatar_id]["video_path"]
@@ -641,14 +644,12 @@ def run_musetalk_inference(
                 preparation=data_preparation
             )
 
-            results_list = []
-
             audio_clips = inference_config[avatar_id]["audio_clips"]
             for audio_num, audio_path in audio_clips.items():
                 print(f"[INFO] Inferring avatar {avatar_id} with audio: {audio_path}")
                 output_path = avatar.inference(audio_path, audio_num, fps, skip_save_images)
 
-                results_list.append({
+                all_results.append({
                     "avatar_id": avatar_id,
                     "output_path": output_path,
                     "original_audio": audio_path
@@ -656,7 +657,7 @@ def run_musetalk_inference(
 
             print("[SUCCESS] MuseTalk inference finished successfully!")
 
-        return results_list
+        return all_results
 
     except Exception as e:
         print(f"[ERROR] Inference failed: {e}")

@@ -12,11 +12,12 @@ from uuid import uuid4
 from termcolor import colored
 from pydub import AudioSegment
 from pydub.silence import detect_silence
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Iterable, Union, Sequence
 import pytz
 import time
 import datetime
 from typing import Optional
+import subprocess
 
 
 # Configure logging for the module
@@ -866,6 +867,230 @@ def is_kaggle():
     Checks for the existence of the /kaggle/working directory.
     """
     return os.path.exists("/kaggle/working")
+
+
+def build_ordered_output_list(combination_path):
+    """
+    Build an ordered list of output_path values ensuring sequential order
+    by audio number (audio_X.mp4) and avatar alternation.
+
+    Args:
+        combination_path (list[dict]): List of dictionaries containing keys:
+            - 'avatar_id'
+            - 'output_path'
+            - 'original_audio'
+
+    Returns:
+        list[str]: Ordered list of output_path preserving correct sequence.
+    """
+    def extract_audio_num(path: str) -> int:
+        """Extracts the number X from 'audio_X.mp4' using regex."""
+        match = re.search(r"audio_(\d+)\.mp4", path)
+        return int(match.group(1)) if match else -1
+
+    # Sort by the numeric value in 'audio_X.mp4', then by avatar_id
+    sorted_items = sorted(
+        combination_path,
+        key=lambda x: (extract_audio_num(x["output_path"]), x["avatar_id"])
+    )
+
+    # Build the ordered list of paths
+    ordered_output_paths = [item["output_path"] for item in sorted_items]
+
+    return ordered_output_paths
+
+
+def _strip_surrounding_quotes(s: str) -> str:
+    """
+    Remove matching surrounding single/double quotes repeatedly.
+    Example: '"/path/to/file.mp4"' -> /path/to/file.mp4
+    """
+    s = s.strip()
+    while len(s) >= 2 and ((s[0] == s[-1]) and s[0] in ("'", '"')):
+        s = s[1:-1].strip()
+    return s
+
+
+def resolve_video_paths(
+    paths: Iterable[Union[str, Path]],
+    base_dir: Optional[Union[str, Path]] = None,
+    must_exist: bool = True,
+    extensions: Sequence[str] = (".mp4", ".avi", ".mov", ".mkv"),
+    keep_order: bool = True,
+    expand_user: bool = True,
+    log_invalid: bool = True,
+) -> List[str]:
+    """
+    Resolve a list of video path candidates (absolute or relative) to normalized absolute paths.
+
+    This function:
+      - accepts str or Path-like entries,
+      - strips surrounding quotes and whitespace,
+      - expands `~` (if expand_user=True),
+      - if path is absolute, uses it; otherwise joins with base_dir,
+      - resolves '..' and '.' (non-strict resolution),
+      - optionally checks the file exists and extension matches,
+      - preserves input order by default.
+
+    Args:
+        paths: Iterable of path-like objects (str or Path) to resolve.
+        base_dir: Base directory to resolve relative paths against. If None uses Path.cwd().
+                  Pass your PROJECT_ROOT / BASE_DIR here to behave like the rest of the project.
+        must_exist: If True (default) only return paths that exist on disk. If False, return resolved paths even if they don't exist.
+        extensions: Sequence of allowed file extensions (case-insensitive). Default includes common video types.
+        keep_order: If True (default), preserve input order. If False, deduplicate and sort.
+        expand_user: If True (default), expand '~' into user home.
+        log_invalid: If True (default) log warnings for skipped entries.
+
+    Returns:
+        List[str]: Normalized absolute path strings (os.path.normpath) for valid video files.
+    """
+    if base_dir is None:
+        base_dir = Path.cwd()
+    else:
+        base_dir = Path(base_dir)
+
+    # Normalize extensions to lowercase and ensure they start with dot
+    exts = tuple(e.lower() if e.startswith(".") else f".{e.lower()}" for e in extensions)
+
+    resolved: List[str] = []
+    seen = set()
+
+    for raw in paths:
+        try:
+            # Accept Path objects too
+            if isinstance(raw, Path):
+                raw_s = str(raw)
+            else:
+                raw_s = str(raw)
+
+            raw_s = raw_s.strip()
+            if raw_s == "":
+                if log_invalid:
+                    logging.debug("Skipping empty path entry.")
+                continue
+
+            # Remove surrounding quotes inserted by YAML or mistakes
+            cleaned = _strip_surrounding_quotes(raw_s)
+
+            # Expand ~
+            if expand_user:
+                cleaned = os.path.expanduser(cleaned)
+
+            candidate = Path(cleaned)
+
+            # If not absolute, join with base_dir
+            if not candidate.is_absolute():
+                # remove leading "./"
+                strpath = str(candidate)
+                if strpath.startswith("./"):
+                    strpath = strpath[2:]
+                candidate = base_dir / strpath
+
+            # Normalize path (no strict resolution to avoid raising on missing)
+            candidate = candidate.resolve(strict=False)
+
+            # Extension check (if no extension, skip)
+            if candidate.suffix.lower() not in exts:
+                if log_invalid:
+                    logging.debug(f"Skipping path (bad extension): {candidate}")
+                continue
+
+            # Existence check
+            if must_exist and not candidate.exists():
+                if log_invalid:
+                    logging.warning(f"Skipping path (not found): {candidate}")
+                continue
+
+            norm = os.path.normpath(str(candidate))
+
+            # Deduplicate while preserving order if requested
+            if keep_order:
+                if norm in seen:
+                    logging.debug(f"Skipping duplicate path: {norm}")
+                    continue
+                seen.add(norm)
+                resolved.append(norm)
+            else:
+                resolved.append(norm)
+
+        except Exception as exc:
+            logging.exception(f"Error resolving path {raw!r}: {exc}")
+
+    if not keep_order:
+        # deduplicate and sort (stable)
+        resolved = sorted(set(resolved))
+
+    return resolved
+
+
+# ==========================
+# HELPER: Get video duration
+# ==========================
+def get_video_duration(video_path: str) -> float:
+    """
+    Returns the duration of a video file using ffprobe.
+
+    Args:
+        video_path (str): Path to the video file.
+
+    Returns:
+        float: Duration in seconds.
+    """
+    try:
+        command = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            video_path
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        return float(result.stdout.strip())
+    except Exception as e:
+        logging.error(f"Error getting duration for {video_path}: {e}")
+        return 0.0
+
+
+def sync_subtitles(video_path: str, subtitles_path: str, output_path: str, offset: float = 0.0):
+    """
+    Synchronize .ass subtitles with a video using ffsubsync.
+
+    Args:
+        video_path (str): Path to the video (already processed with xfade).
+        subtitles_path (str): Path to the original .ass subtitles.
+        output_path (str): Path to save the synchronized subtitles.
+        offset (float): Optional offset in seconds (+ advance, - delay).
+    """
+    video_path = Path(video_path)
+    subtitles_path = Path(subtitles_path)
+    output_path = Path(output_path)
+
+    if not video_path.exists():
+        raise FileNotFoundError(f"Video not found: {video_path}")
+    if not subtitles_path.exists():
+        raise FileNotFoundError(f"Subtitles not found: {subtitles_path}")
+
+    # Build ffsubsync command
+    command = [
+        "ffsubsync",
+        str(video_path),
+        "-i", str(subtitles_path),
+        "-o", str(output_path),  # output debe ser .ass
+        "--frame-rate", "30"
+    ]
+
+    if offset != 0:
+        command += ["--offset", str(offset)]
+
+    logging.info(f"Executing ffsubsync command: {' '.join(command)}")
+
+    try:
+        result = subprocess.run(command, check=True)  # stdout/stderr se envía directo a la consola
+        logging.info(f"ffsubsync completed successfully: {result.returncode}")
+        logging.info(result.stdout)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"ffsubsync failed: {e.stderr}")
+        raise RuntimeError(f"ffsubsync error: {e.stderr}")
 
 
 if __name__ == "__main__":

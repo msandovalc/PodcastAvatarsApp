@@ -69,6 +69,7 @@ openpyxl = ">=3.1.5,<4.0.0"
 
 # --- Libraries Without Specific Version (*) ---
 openai-whisper = "*"
+ffsubsync = "^0.4.30"
 
 
 [build-system]
