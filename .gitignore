@@ -13,7 +13,7 @@ poetry.lock
 __pycache__/
 *.pyc
 
-# Ignore everything inside audiobook_content
+# Ignore everything inside podcast_content
 podcast_content/**
 
 # Allow subdirectories (so Git "sees" them)
@@ -24,6 +24,9 @@ podcast_content/**
 
 # ✅ Allow music folder and its files
 !podcast_content/music/**
+
+# ✅ Allow cover folder and its files
+!podcast_content/cover/**
 
 # Ignore everything inside ebook
 ebook/**
