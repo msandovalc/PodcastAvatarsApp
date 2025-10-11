@@ -11,4 +11,4 @@ avator_2:
     audio_1: '"F:\Development\PyCharm\Projects\PodcastAvatarsApp\podcast_content\audio\segment_4.wav"'
   bbox_shift: 5
   preparation: true
-  video_path: '"data/video/yongen.mp4"'
+  video_path: '"data/video/yongen.mp41"'
