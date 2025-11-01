@@ -24,7 +24,7 @@ priority = "explicit"
 
 [[tool.poetry.source]]
 name = "openmmlab"
-url = "https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html"
+url = "https://download.openmmlab.com/mmcv/dist/cu124/torch2.5.1/index.html"
 priority = "explicit"
 
 
