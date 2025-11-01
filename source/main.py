@@ -659,7 +659,7 @@ def create_podcast():
             # Example: Schedule for Saturday at 9:00 AM, default timezone
             schedule = "weekly_tuesday_5am"
             publish_video_at = get_next_publish_datetime(schedule_name=schedule, day='tuesday', target_time='5:00',
-                                                         start_date='2025-09-29', target_week=True, target_day=False)
+                                                         start_date='2025-11-02', target_week=True, target_day=False)
 
             metadata = {
                 'title': title,
@@ -682,6 +682,7 @@ def create_podcast():
                 print(f"The video was uploaded successfully. URL: {video_url}")
             else:
                 print(f"The video could not be uploaded. Status: {upload_status}")
+                return
 
             output_video_folder = os.path.join(OUTPUT_DIR, os.path.basename(final_video_path))
             shutil.move(final_video_path, output_video_folder)
@@ -752,6 +753,7 @@ def create_podcast():
                     print(f"The video was uploaded successfully. URL: {video_url}")
                 else:
                     print(f"The video could not be uploaded. Status: {short_pload_status}")
+                    return
 
                 # Ensure publish_short_at is timezone-unaware
                 if publish_short_at.tzinfo is not None:
@@ -790,13 +792,8 @@ def create_podcast():
                     successful_uploads += 1
                     logger.info(f"✅ Instagram Reel Video {index} scheduled successfully!")
                 else:
-                    # Fallback: Publish immediately
-                    if instagram_api.publish_immediately(video_url):
-                        successful_uploads += 1
-                        logger.warning(f"⚠️ Immediate publication for Instagram Reel {index}.")
-                    else:
-                        failed_uploads += 1
-                        logger.error(f"❌ Complete failure for Instagram Reel {index}.")
+                    failed_uploads += 1
+                    logger.error(f"❌ Complete failure for Instagram Reel {index}.")
 
                 # Wait between requests
                 time.sleep(15)
