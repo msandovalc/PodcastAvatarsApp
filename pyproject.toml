@@ -5,6 +5,7 @@ description = "Proyecto para generar podcasts con múltiples avatares usando Mus
 authors = [
     { name = "msandovalc", email = "msandovalgm@live.com.mx" }
 ]
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 
