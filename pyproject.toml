@@ -19,12 +19,12 @@ package-mode = false
 
 [[tool.poetry.source]]
 name = "pytorch"
-url = "https://download.pytorch.org/whl/cu124"
+url = "https://download.pytorch.org/whl/cu121"
 priority = "explicit"
 
 [[tool.poetry.source]]
 name = "openmmlab"
-url = "https://download.openmmlab.com/mmcv/dist/cu124/torch2.5.1/index.html"
+url = "https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html"
 priority = "explicit"
 
 
