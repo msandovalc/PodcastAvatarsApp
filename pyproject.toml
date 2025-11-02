@@ -40,11 +40,10 @@ torchaudio = { version = "2.5.1+cu124", source = "pytorch" }
 # mmcv is installed manually because it requires compilation from source
 # pip install --upgrade mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html
 # Force mmcv to be resolved from the openmmlab index (prebuilt binary with _ext)
-mmcv = { version = "2.1.0", source = "openmmlab" }
-# Pin MMLab packages to versions compatible with mmcv 2.1.0
-mmpose = "1.3.2"
-mmdet = "3.3.0"
-mmengine = "0.10.7"
+#mmcv = { version = "2.1.0", source = "openmmlab" }
+#mmpose = "1.3.2"
+#mmdet = "3.3.0"
+#mmengine = "0.10.7"
 
 # --- Libraries with Range or Minimum Version Constraints ---
 moviepy = "==1.0.3"
