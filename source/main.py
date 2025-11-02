@@ -772,28 +772,28 @@ def create_podcast():
                 data_to_write.append(entry)
                 logging.info(f"Prepared video: {chapter_name} for {publish_short_at}")
 
-                # Start Uploading Instagram Reel Video
-                logging.info("Uploading Instagram Reel.")
-
-                public_id = f"reel_{index}_{int(time.time())}"
-                video_url = cloudinary_uploader.upload_video(clip['clip_path'], public_id=public_id)
-
-                if not video_url:
-                    logger.error("Cloudinary upload failed.")
-                    failed_uploads += 1
-                    continue
-
-                # For scheduled publishing
-                container_id = instagram_api.create_scheduled_container(caption=description,
-                                                                        video_url=video_url,
-                                                                        publish_time=int(publish_short_at.timestamp()))
-
-                if container_id:
-                    successful_uploads += 1
-                    logger.info(f"✅ Instagram Reel Video {index} scheduled successfully!")
-                else:
-                    failed_uploads += 1
-                    logger.error(f"❌ Complete failure for Instagram Reel {index}.")
+                # # Start Uploading Instagram Reel Video
+                # logging.info("Uploading Instagram Reel.")
+                #
+                # public_id = f"reel_{index}_{int(time.time())}"
+                # video_url = cloudinary_uploader.upload_video(clip['clip_path'], public_id=public_id)
+                #
+                # if not video_url:
+                #     logger.error("Cloudinary upload failed.")
+                #     failed_uploads += 1
+                #     continue
+                #
+                # # For scheduled publishing
+                # container_id = instagram_api.create_scheduled_container(caption=description,
+                #                                                         video_url=video_url,
+                #                                                         publish_time=int(publish_short_at.timestamp()))
+                #
+                # if container_id:
+                #     successful_uploads += 1
+                #     logger.info(f"✅ Instagram Reel Video {index} scheduled successfully!")
+                # else:
+                #     failed_uploads += 1
+                #     logger.error(f"❌ Complete failure for Instagram Reel {index}.")
 
                 # Wait between requests
                 time.sleep(15)
