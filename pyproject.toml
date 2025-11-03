@@ -33,9 +33,11 @@ priority = "explicit"
 musetalk = { path = "MuseTalk", develop = true }
 
 # Use the cu124 (CUDA 12.4) wheels from the pytorch index
-torch = { version = "2.5.1", source = "pytorch" }
-torchvision = { version = "0.20.1", source = "pytorch" }
-torchaudio = { version = "2.5.1", source = "pytorch" }
+# Torch, torchvision, and torchaudio are installed manually inside Poetry
+# using CUDA 12.1 wheels to ensure GPU compatibility in Kaggle.
+#torch = { version = "2.5.1", source = "pytorch" }
+#torchvision = { version = "0.20.1", source = "pytorch" }
+#torchaudio = { version = "2.5.1", source = "pytorch" }
 
 # mmcv is installed manually because it requires compilation from source
 # pip install --upgrade mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html
