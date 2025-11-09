@@ -671,7 +671,7 @@ def create_podcast():
             # Example: Schedule for Saturday at 9:00 AM, default timezone
             schedule = "weekly_sunday_5am"
             publish_video_at = get_next_publish_datetime(schedule_name=schedule, day='sunday', target_time='5:00',
-                                                         start_date='2025-11-08', target_week=True, target_day=False)
+                                                         start_date='2025-11-10', target_week=True, target_day=False)
 
             metadata = {
                 'title': title,
