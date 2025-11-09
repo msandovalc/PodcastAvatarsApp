@@ -822,29 +822,29 @@ def bulk_upload_reels():
 if __name__ == "__main__":
     logging.info("__main__")
 
-    try:
-
-        # CHANNELS = {
-        #     "El Universo del Audiolibro": "credentials1.json",
-        #     "Canal Metafísico": "credentials2.json",
-        #     "Reflexiones Diarias": "credentials3.json",
-        #     "Audiolibros Premium": "credentials4.json",
-        # }
-        #
-        # # Path to your client_secret.json
-        # CLIENT_SECRET_FILE = Path(__file__).resolve().parent / "credentials" / "client_secret.json"
-
-        # yt_auth = YouTubeMultiChannelAuth(client_secret_file=CLIENT_SECRET_FILE, channels=CHANNELS)
-        #
-        # # Example: authenticate one channel
-        # youtube, channel_id = yt_auth.get_authenticated_service("El Universo del Audiolibro")
-        # if youtube:
-        #     print(f"✅ Channel ready: {channel_id}")
-
-        bulk_upload_reels()
-    except Exception as e:
-        logging.exception("Critical error in bulk upload.")
-        print(f"❌ Critical error: {str(e)}")
+    # try:
+    #
+    #     # CHANNELS = {
+    #     #     "El Universo del Audiolibro": "credentials1.json",
+    #     #     "Canal Metafísico": "credentials2.json",
+    #     #     "Reflexiones Diarias": "credentials3.json",
+    #     #     "Audiolibros Premium": "credentials4.json",
+    #     # }
+    #     #
+    #     # # Path to your client_secret.json
+    #     # CLIENT_SECRET_FILE = Path(__file__).resolve().parent / "credentials" / "client_secret.json"
+    #
+    #     # yt_auth = YouTubeMultiChannelAuth(client_secret_file=CLIENT_SECRET_FILE, channels=CHANNELS)
+    #     #
+    #     # # Example: authenticate one channel
+    #     # youtube, channel_id = yt_auth.get_authenticated_service("El Universo del Audiolibro")
+    #     # if youtube:
+    #     #     print(f"✅ Channel ready: {channel_id}")
+    #
+    #     bulk_upload_reels()
+    # except Exception as e:
+    #     logging.exception("Critical error in bulk upload.")
+    #     print(f"❌ Critical error: {str(e)}")
 
     #
     # from excelhandler import ExcelHandler

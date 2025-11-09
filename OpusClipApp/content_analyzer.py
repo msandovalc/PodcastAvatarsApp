@@ -1,5 +1,6 @@
 import torch
-import clip
+import open_clip
+from open_clip import tokenize
 from transformers import pipeline
 import logging
 import os
@@ -38,7 +39,13 @@ class ContentAnalyzer:
         self.max_workers = max_workers
         try:
             self.logger.debug("Loading CLIP model on %s", self.device)
-            self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
+
+            self.clip_model, _, self.preprocess = open_clip.create_model_and_transforms(
+                "ViT-B-32",
+                pretrained='openai',
+                device=self.device
+            )
+
             self.logger.info("CLIP model loaded on %s", self.device)
             self.logger.debug("Loading sentiment analysis model")
             # self.sentiment_analyzer = pipeline(
@@ -91,7 +98,7 @@ class ContentAnalyzer:
 
             self.logger.debug("Preprocessing frame at %ss", start_time)
             image = self.preprocess(Image.fromarray(frame)).unsqueeze(0).to(self.device)
-            text_tokens = clip.tokenize([text]).to(self.device)
+            text_tokens = tokenize([text]).to(self.device)
 
             self.logger.debug("Computing CLIP similarity for segment at %ss", start_time)
             with torch.no_grad():

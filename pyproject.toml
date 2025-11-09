@@ -33,6 +33,9 @@ musetalk = { path = "MuseTalk", develop = true }
 
 # Use the cu124 (CUDA 12.4) wheels from the pytorch index
 # Torch, torchvision, and torchaudio are installed manually inside Poetry
+#torch = { version = "2.5.1", source = "pytorch" }
+#torchvision = { version = "0.20.1", source = "pytorch" } # Versión compatible con Torch 2.5.1
+#torchaudio = { version = "2.5.1", source = "pytorch" }   # Versión compatible con Torch 2.5.1
 
 # mmcv is installed manually because it requires compilation from source
 # pip install --upgrade mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu121/torch2.5.1/index.html
@@ -44,13 +47,14 @@ srt-equalizer = ">=0.1.10,<0.2.0"
 assemblyai = ">=0.43.1,<0.44.0"
 ffmpeg = ">=1.4,<2.0"
 ffmpeg-python = ">=0.2.0"
-clip = ">=0.2.0,<0.3.0"
+#clip = ">=0.2.0,<0.3.0"
+open-clip-torch = ">=2.24.0"
 numpy = ">=1.26"
 opencv-python = ">=4.10"
 pandas = ">=2.3.2,<3.0.0"
 psutil = ">=7.1.0,<8.0.0"
 termcolor = ">=3.1.0,<4.0.0"
-
+tf-keras = ">=2.16.0"
 cloudinary = ">=1.44.1,<2.0.0"
 
 # --- LangChain and Google API Dependencies (Specific Ranges) ---

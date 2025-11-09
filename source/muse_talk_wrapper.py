@@ -45,12 +45,23 @@ class MuseTalkConfigManager:
                                                 preparation: bool = True,
                                                 bbox_shift: int = 5,
                                                 video_avatar_1_path: str = VIDEO_PATH,
-                                                video_avatar_2_path: str = VIDEO_PATH,
+                                                # Robust change: Default to None for the second avatar path
+                                                video_avatar_2_path: str | None = None,
                                                 output_yaml: str = YAML_PATH):
         """
         Updates MuseTalk YAML avatars automatically based on podcast segments.
 
-        Paths for video_path and audio_clips are always wrapped in double quotes.
+        This function supports both single-avatar and dual-avatar configurations.
+        If video_avatar_2_path is None or identical to video_avatar_1_path, all speakers
+        will be mapped to the single video defined by video_avatar_1_path.
+
+        Args:
+            segments (list[dict]): List of transcription segments including 'speaker' and 'audio_path'.
+            preparation (bool): MuseTalk preparation flag.
+            bbox_shift (int): MuseTalk bounding box shift value.
+            video_avatar_1_path (str): The video path for the first avatar (Speaker 1).
+            video_avatar_2_path (str | None): The video path for the second avatar (Speaker 2). Defaults to None for single-avatar mode.
+            output_yaml (str): Path to the output YAML configuration file.
         """
         try:
             # === Step 1: Clear YAML / config ===
@@ -67,6 +78,13 @@ class MuseTalkConfigManager:
                 logger.info(f"YAML file content cleared: {output_yaml}")
 
             # === Step 2: Process new segments ===
+
+            # Determine if a dual-avatar setup is intended (only if path 2 is explicitly set and different)
+            is_dual_avatar = (video_avatar_2_path is not None) and (video_avatar_1_path != video_avatar_2_path)
+
+            # Define the final path for Avatar 2. If single-avatar mode, this defaults to Path 1.
+            final_video_avatar_2_path = str(video_avatar_2_path) if is_dual_avatar else str(video_avatar_1_path)
+
             for segment in segments:
                 speaker = segment.get("speaker")
                 audio_path = segment.get("audio_path")
@@ -74,8 +92,7 @@ class MuseTalkConfigManager:
                 # Validation
                 if not speaker or not audio_path or not Path(audio_path).exists():
                     reason = []
-                    if not speaker:
-                        reason.append("Missing speaker")
+                    if not speaker: reason.append("Missing speaker")
                     if not audio_path:
                         reason.append("Missing audio_path")
                     elif not Path(audio_path).exists():
@@ -83,28 +100,26 @@ class MuseTalkConfigManager:
                     logger.warning(f"Skipping invalid segment: {segment} | Reasons: {', '.join(reason)}")
                     continue
 
-                # Normalize speaker -> avator_X
+                # Normalize speaker -> avator_X key (e.g., "Speaker 1" -> "avator_1")
                 speaker_str = str(speaker)
                 speaker_num = ''.join(c for c in speaker_str if c.isdigit()) or "1"
                 avatar_key = f"avator_{speaker_num}"
 
                 # --- Conditional Video Path Selection ---
 
-                # 1. Determine the required video path based on the avatar_key
                 if avatar_key == "avator_1":
-                    # Use video path for Speaker 1
+                    # Avatar 1 always uses Path 1
                     selected_video_path = str(video_avatar_1_path)
 
                 elif avatar_key == "avator_2":
-                    # Use video path for Speaker 2
-                    # Ensure 'video_avatar_2_path' is defined in the calling scope
-                    selected_video_path = str(video_avatar_2_path)
+                    # Avatar 2 uses the dynamically determined path (Path 2 if dual, Path 1 if single)
+                    selected_video_path = final_video_avatar_2_path
 
                 else:
-                    # Use default path for any other avator (e.g., avator_3, etc.)
+                    # Any other avatar (e.g., avator_3) defaults to Path 1
                     selected_video_path = str(video_avatar_1_path)
 
-                # Normalize speaker to avator_X key (e.g., "Speaker 1" -> "avator_1")
+                # Initialize avatar configuration if it doesn't exist
                 if avatar_key not in self.config:
                     self.config[avatar_key] = {
                         "preparation": preparation,
