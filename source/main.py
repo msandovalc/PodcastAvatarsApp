@@ -19,7 +19,7 @@ from video import *
 from subtitles import *
 from image_handler import *
 from muse_talk_wrapper import *
-# from MuseTalk.scripts.realtime_inference import run_musetalk_inference, musetalk_inference_reloaded
+from MuseTalk.scripts.realtime_inference import run_musetalk_inference, musetalk_inference_reloaded
 
 # --- Configuration ---
 logger = setup_logger(__name__)
@@ -863,11 +863,6 @@ if __name__ == "__main__":
         enable_instagram = False
 
         create_podcast()
-
-        # print("[INFO] Starting MuseTalk inference from class method...")
-        # results_list = run_musetalk_inference()
-        # results_list = inferense_v2()
-        # print(f"[INFO] Inference finished successfully from class method.: {results_list}")
 
     except Exception as e:
         logger.error(f"[ERROR] Inference failed in class: {e}")
