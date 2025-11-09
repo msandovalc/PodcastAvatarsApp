@@ -19,7 +19,7 @@ from video import *
 from subtitles import *
 from image_handler import *
 from muse_talk_wrapper import *
-from MuseTalk.scripts.realtime_inference import run_musetalk_inference, musetalk_inference_reloaded
+# from MuseTalk.scripts.realtime_inference import run_musetalk_inference, musetalk_inference_reloaded
 
 # --- Configuration ---
 logger = setup_logger(__name__)
@@ -59,6 +59,8 @@ gcp_manager = None
 instagram_api = None
 cloudinary_uploader = None
 youtube_uploader = None
+enable_youtube = False
+enable_instagram = False
 
 
 def initialize_app():
@@ -309,6 +311,8 @@ def process_and_generate_audio(chapter_data: dict[str, Any], chapter_text: str, 
 
         audio_output_paths = []
 
+        logger.info(f"audio_output_path path: {audio_output_path}")
+
         # Synthesize audio directly from the local text
         audio_output_paths = gcp_manager.synthesize_audio_from_text(
             text_content=chapter_text,
@@ -530,7 +534,7 @@ def create_podcast():
         for chapter in excel_data:
 
             if chapter.get('Enabled') in (0, False):
-                logger.info(f"Excel Enabled: {chapter.get('Enabled')}")
+                logger.info(f"Content Enabled: {chapter.get('Enabled')}")
                 continue
 
             chapter_name = chapter.get('Title')
@@ -574,6 +578,8 @@ def create_podcast():
             audio_paths = process_and_generate_audio(chapter_data=chapter, chapter_text=chapter_text,
                                                      audio_output_path=local_audio_path)
 
+            logger.info(f"audio_paths: {audio_paths}")
+
             if not audio_paths:
                 logging.error("TTS processing failed. Skipping video generation for this topic.")
                 return
@@ -582,19 +588,19 @@ def create_podcast():
             manager.update_avatar_audio_clips_from_segments(segments=audio_paths,
                                                             preparation=True,
                                                             video_avatar_1_path=str(AVATARS_DIR / "avatar_01.mp4"),
-                                                            video_avatar_2_path=None
+                                                            video_avatar_2_path=str(AVATARS_DIR / "avatar_02.mp4"),
                                                             )
 
             manager.save_yaml()  # Overwrites original YAML
 
             try:
-                print("[INFO] Starting MuseTalk inference from class method...")
+                logger.info("[INFO] Starting MuseTalk inference from class method...")
                 video_paths = run_musetalk_inference()
                 # video_paths = musetalk_inference_reloaded()
-                print(f"[INFO] Inference finished successfully from class method.{video_paths}")
+                logger.info(f"[INFO] Inference finished successfully from class method.{video_paths}")
 
             except Exception as e:
-                print(f"[ERROR] Inference failed in class: {e}")
+                logger.info(f"[ERROR] Inference failed in class: {e}")
                 raise
 
             combine_start = time.time()
@@ -653,164 +659,174 @@ def create_podcast():
             logging.info(
                 f"Video combination took {combine_end - combine_start:.2f} seconds. final_video_path: {final_video_path}")
 
-            # logging.info("Generating metadata for YouTube upload.")
-            # title, description, keywords = content_generator.generate_metadata_shorts(book_title,
-            #                                                                           chapter_text[:500],
-            #                                                                           language)
-            #
-            # # Example: Schedule for Saturday at 9:00 AM, default timezone
-            # schedule = "weekly_sunday_5am"
-            # publish_video_at = get_next_publish_datetime(schedule_name=schedule, day='sunday', target_time='5:00',
-            #                                              start_date='2025-11-08', target_week=True, target_day=False)
-            #
-            # metadata = {
-            #     'title': title,
-            #     'description': f"{chapter_name}\n\n{description}\n\n",
-            #     'keywords': ",".join(keywords),
-            #     'publish_at': publish_video_at,
-            # }
-            #
-            # logger.info(f"Generated metadata: {metadata}")
-            #
-            # logger.info("Uploading video to YouTube.")
-            #
-            # # New call to capture the results
-            # video_url, upload_status = youtube_uploader.handle_video_upload(video_path=final_video_path,
-            #                                                                 thumbail_path=image_path,
-            #                                                                 metadata=metadata)
-            #
-            # # You can use these values to display the information
-            # if upload_status == "Success":
-            #     print(f"The video was uploaded successfully. URL: {video_url}")
-            # else:
-            #     print(f"The video could not be uploaded. Status: {upload_status}")
-            #     return
-            #
-            # output_video_folder = os.path.join(OUTPUT_DIR, os.path.basename(final_video_path))
-            # shutil.move(final_video_path, output_video_folder)
-            # logger.info(f"File moved successfully to: {output_video_folder}")
-            #
-            # # Save the data in excel file
-            # excel_handler.write_data_by_title(title=chapter_name, sheet_name='Content', copy_text=description,
-            #                                   video_path=output_video_folder, schedule=publish_video_at)
-            #
-            # logger.info(f"Starting to create Short Videos!")
-            #
-            # result = process_video(
-            #     video_path=output_video_folder,
-            #     output_dir=str(OUTPUT_SHORTS_DIR),
-            #     num_clips=5,
-            #     min_duration=60,
-            #     max_duration=90,
-            #     subtitle_style=subtitle_style,
-            #     book_title=book_title
-            # )
-            #
-            # # Prepare data for write_data
-            # data_to_write = []
-            # successful_uploads = 0
-            # failed_uploads = 0
-            #
-            # for index, clip in enumerate(result, 1):
-            #
-            #     title = clip['metadata']['book_title']
-            #     logging.info(f"Generating metadata for YouTube upload. {title}")
-            #
-            #     title, description, keywords = content_generator.generate_metadata_shorts(title,
-            #                                                                               clip['segment_text'],
-            #                                                                               language)
-            #     logger.info(f"Generated metadata title: {title} description:  {description} keywords:  {keywords}")
-            #
-            #     # Example: Schedule for Friday at 10:00 AM, default timezone
-            #     schedule = "sunday_5am"
-            #     logger.info(f"Generated sunday_5am: {schedule}")
-            #     params = convert_datetime(publish_video_at)
-            #     logger.info(f"Generated params[day]: {params['day']} - "
-            #                  f"params[target_time]: {params['target_time']} - "
-            #                  f"params[start_date]: {params['start_date']}")
-            #
-            #     publish_short_at = get_next_publish_datetime(schedule_name=schedule,
-            #                                                  day=params["day"],
-            #                                                  target_time=params["target_time"],
-            #                                                  start_date=params["start_date"],
-            #                                                  target_week=False,
-            #                                                  target_day=True,
-            #                                                  interval_hours=24)
-            #
-            #     metadata = {
-            #         'title': title,
-            #         'description': f"{video_url}\n\n{description}\n\n",
-            #         'keywords': ",".join(keywords),
-            #         'publish_at': publish_short_at,
-            #     }
-            #
-            #     logger.info("Uploading Short Video to YouTube.")
-            #
-            #     logger.info(f"Prepared video path: {clip['clip_path']}")
-            #
-            #     # New call to capture the results
-            #     short_video_url, short_pload_status = youtube_uploader.handle_video_upload(video_path=clip['clip_path'],
-            #                                                                                thumbail_path=image_path,
-            #                                                                                metadata=metadata)
-            #
-            #     # You can use these values to display the information
-            #     if short_pload_status == "Success":
-            #         logger.info(f"The video was uploaded successfully. URL: {video_url}")
-            #     else:
-            #         logger.info(f"The video could not be uploaded. Status: {short_pload_status}")
-            #         return
-            #
-            #     # Ensure publish_short_at is timezone-unaware
-            #     if publish_short_at.tzinfo is not None:
-            #         logger.debug(f"Removing timezone from publish_short_at: {publish_short_at}")
-            #         publish_short_at = publish_short_at.replace(tzinfo=None)
-            #
-            #     entry = {
-            #         'Id': str(uuid.uuid4()),
-            #         'Book title': title,
-            #         'Title': chapter_name,
-            #         'Chapter': "N/A",
-            #         'Copywriting': description,
-            #         'Schedule': publish_short_at,
-            #         'Output path': clip['clip_path'],
-            #     }
-            #     data_to_write.append(entry)
-            #     logger.info(f"Prepared video: {chapter_name} for {publish_short_at}")
-            #
-            #     # # Start Uploading Instagram Reel Video
-            #     # logging.info("Uploading Instagram Reel.")
-            #     #
-            #     # public_id = f"reel_{index}_{int(time.time())}"
-            #     # video_url = cloudinary_uploader.upload_video(clip['clip_path'], public_id=public_id)
-            #     #
-            #     # if not video_url:
-            #     #     logger.error("Cloudinary upload failed.")
-            #     #     failed_uploads += 1
-            #     #     continue
-            #     #
-            #     # # For scheduled publishing
-            #     # container_id = instagram_api.create_scheduled_container(caption=description,
-            #     #                                                         video_url=video_url,
-            #     #                                                         publish_time=int(publish_short_at.timestamp()))
-            #     #
-            #     # if container_id:
-            #     #     successful_uploads += 1
-            #     #     logger.info(f"✅ Instagram Reel Video {index} scheduled successfully!")
-            #     # else:
-            #     #     failed_uploads += 1
-            #     #     logger.error(f"❌ Complete failure for Instagram Reel {index}.")
-            #
-            #     # Wait between requests
-            #     time.sleep(15)
-            #
-            # logger.info(f"Summary: Successful: {successful_uploads}, Failed: {failed_uploads}")
-            #
-            # # Write all entries to Shorts sheet
-            # if data_to_write:
-            #     excel_handler.write_data(data=data_to_write, sheet_name='Shorts')
-            #     logging.info(f"Scheduled {len(data_to_write)} videos in Shorts sheet.")
-            # else:
-            #     logging.warning("No videos scheduled. All chapters were skipped or Content sheet is empty.")
+            logging.info("Generating metadata for YouTube upload.")
+            title, description, keywords = content_generator.generate_metadata_shorts(book_title,
+                                                                                      chapter_text[:500],
+                                                                                      language)
+
+            if not enable_youtube:
+                logger.warning("Youtube upload is NOT Enabled")
+                continue
+
+            # Example: Schedule for Saturday at 9:00 AM, default timezone
+            schedule = "weekly_sunday_5am"
+            publish_video_at = get_next_publish_datetime(schedule_name=schedule, day='sunday', target_time='5:00',
+                                                         start_date='2025-11-08', target_week=True, target_day=False)
+
+            metadata = {
+                'title': title,
+                'description': f"{chapter_name}\n\n{description}\n\n",
+                'keywords': ",".join(keywords),
+                'publish_at': publish_video_at,
+            }
+
+            logger.info(f"Generated metadata: {metadata}")
+
+            logger.info("Uploading video to YouTube.")
+
+            # New call to capture the results
+            video_url, upload_status = youtube_uploader.handle_video_upload(video_path=final_video_path,
+                                                                            thumbail_path=image_path,
+                                                                            metadata=metadata)
+
+            # You can use these values to display the information
+            if upload_status == "Success":
+                print(f"The video was uploaded successfully. URL: {video_url}")
+            else:
+                print(f"The video could not be uploaded. Status: {upload_status}")
+                return
+
+            output_video_folder = os.path.join(OUTPUT_DIR, os.path.basename(final_video_path))
+            shutil.move(final_video_path, output_video_folder)
+            logger.info(f"File moved successfully to: {output_video_folder}")
+
+            # Save the data in excel file
+            excel_handler.write_data_by_title(title=chapter_name, sheet_name='Content', copy_text=description,
+                                              video_path=output_video_folder, schedule=publish_video_at)
+
+            logger.info(f"Starting to create Short Videos!")
+
+            result = process_video(
+                video_path=output_video_folder,
+                output_dir=str(OUTPUT_SHORTS_DIR),
+                num_clips=5,
+                min_duration=60,
+                max_duration=90,
+                subtitle_style=subtitle_style,
+                book_title=book_title
+            )
+
+            logger.info(f"result -->: {result}")
+
+            # Prepare data for write_data
+            data_to_write = []
+            successful_uploads = 0
+            failed_uploads = 0
+
+            for index, clip in enumerate(result, 1):
+
+                title = clip['metadata']['book_title']
+                logging.info(f"Generating metadata for YouTube upload. {title}")
+
+                title, description, keywords = content_generator.generate_metadata_shorts(title,
+                                                                                          clip['segment_text'],
+                                                                                          language)
+                logger.info(f"Generated metadata title: {title} description:  {description} keywords:  {keywords}")
+
+                # Example: Schedule for Friday at 10:00 AM, default timezone
+                schedule = "sunday_5am"
+                logger.info(f"Generated sunday_5am: {schedule}")
+                params = convert_datetime(publish_video_at)
+                logger.info(f"Generated params[day]: {params['day']} - "
+                             f"params[target_time]: {params['target_time']} - "
+                             f"params[start_date]: {params['start_date']}")
+
+                publish_short_at = get_next_publish_datetime(schedule_name=schedule,
+                                                             day=params["day"],
+                                                             target_time=params["target_time"],
+                                                             start_date=params["start_date"],
+                                                             target_week=False,
+                                                             target_day=True,
+                                                             interval_hours=24)
+
+                metadata = {
+                    'title': title,
+                    'description': f"{video_url}\n\n{description}\n\n",
+                    'keywords': ",".join(keywords),
+                    'publish_at': publish_short_at,
+                }
+
+                logger.info("Uploading Short Video to YouTube.")
+
+                logger.info(f"Prepared video path: {clip['clip_path']}")
+
+                # New call to capture the results
+                short_video_url, short_pload_status = youtube_uploader.handle_video_upload(video_path=clip['clip_path'],
+                                                                                           thumbail_path=image_path,
+                                                                                           metadata=metadata)
+
+                # You can use these values to display the information
+                if short_pload_status == "Success":
+                    logger.info(f"The video was uploaded successfully. URL: {video_url}")
+                else:
+                    logger.info(f"The video could not be uploaded. Status: {short_pload_status}")
+                    return
+
+                # Ensure publish_short_at is timezone-unaware
+                if publish_short_at.tzinfo is not None:
+                    logger.debug(f"Removing timezone from publish_short_at: {publish_short_at}")
+                    publish_short_at = publish_short_at.replace(tzinfo=None)
+
+                entry = {
+                    'Id': str(uuid.uuid4()),
+                    'Book title': title,
+                    'Title': chapter_name,
+                    'Chapter': "N/A",
+                    'Copywriting': description,
+                    'Schedule': publish_short_at,
+                    'Output path': clip['clip_path'],
+                }
+                data_to_write.append(entry)
+                logger.info(f"Prepared video: {chapter_name} for {publish_short_at}")
+
+                if not enable_instagram:
+                    logger.warning("Instagram upload is NOT Enabled")
+                    continue
+
+                # Start Uploading Instagram Reel Video
+                logging.info("Uploading Instagram Reel.")
+
+                public_id = f"reel_{index}_{int(time.time())}"
+                video_url = cloudinary_uploader.upload_video(clip['clip_path'], public_id=public_id)
+
+                if not video_url:
+                    logger.error("Cloudinary upload failed.")
+                    failed_uploads += 1
+                    continue
+
+                # For scheduled publishing
+                container_id = instagram_api.create_scheduled_container(caption=description,
+                                                                        video_url=video_url,
+                                                                        publish_time=int(publish_short_at.timestamp()))
+
+                if container_id:
+                    successful_uploads += 1
+                    logger.info(f"✅ Instagram Reel Video {index} scheduled successfully!")
+                else:
+                    failed_uploads += 1
+                    logger.error(f"❌ Complete failure for Instagram Reel {index}.")
+
+                # Wait between requests
+                time.sleep(15)
+
+            logger.info(f"Summary: Successful: {successful_uploads}, Failed: {failed_uploads}")
+
+            # Write all entries to Shorts sheet
+            if data_to_write:
+                excel_handler.write_data(data=data_to_write, sheet_name='Shorts')
+                logging.info(f"Scheduled {len(data_to_write)} videos in Shorts sheet.")
+            else:
+                logging.warning("No videos scheduled. All chapters were skipped or Content sheet is empty.")
 
         # Store the end time
         end_time = time.time()
@@ -828,11 +844,11 @@ def create_podcast():
 
 if __name__ == "__main__":
 
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Script directory: {os.path.dirname(__file__)}")
+    logger.info(f"Current working directory: {os.getcwd()}")
+    logger.info(f"Script directory: {os.path.dirname(__file__)}")
 
     n_threads = psutil.cpu_count(logical=True)
-    print(f"Your system can use {n_threads} threads based on available CPU resources.")
+    logger.info(f"Your system can use {n_threads} threads based on available CPU resources.")
 
     try:
 
@@ -840,8 +856,11 @@ if __name__ == "__main__":
         initialize_directories()
 
         if not initialize_app():
-            print(colored("[-] Failed to initialize the application. Check logs for errors.", "red"))
+            logger.info(colored("[-] Failed to initialize the application. Check logs for errors.", "red"))
             exit(1)
+
+        enable_youtube = True
+        enable_instagram = False
 
         create_podcast()
 
@@ -851,5 +870,5 @@ if __name__ == "__main__":
         # print(f"[INFO] Inference finished successfully from class method.: {results_list}")
 
     except Exception as e:
-        print(f"[ERROR] Inference failed in class: {e}")
+        logger.error(f"[ERROR] Inference failed in class: {e}")
         raise

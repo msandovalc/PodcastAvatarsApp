@@ -3,6 +3,7 @@ import logging
 import io
 import re
 import time
+import uuid
 from pathlib import Path
 from dotenv import load_dotenv
 from google.cloud import texttospeech_v1
@@ -106,17 +107,14 @@ class GCPTextToSpeechManager:
         """
         try:
 
-            # es-US-Chirp3-HD-Laomedeia, es-US-Chirp3-HD-Gacrux --> Female voice
-            # es-US-Chirp3-HD-Algenib --> Male voice
             # Step 1: Split the text into safe chunks based on byte size.
-            # This function is designed to avoid the API's sentence-length limit.
             chunks = split_text_into_chunks(text_content, max_bytes=4500)
 
             logger.info(f"DEBUG: Generated {len(chunks)} chunks for TTS")
             for i, chunk in enumerate(chunks, start=1):
                 logger.info(f"DEBUG: Chunk {i} length={len(chunk.encode('utf-8'))} bytes, start='{chunk[:100]}...'")
 
-            # Step 2: Prepare voice and audio config
+            # Step 2 & 3: Prepare config and Synthesize each chunk
             language_code_from_voice = '-'.join(voice_name.split('-')[:2])
             voice = types.VoiceSelectionParams(
                 language_code=language_code_from_voice,
@@ -160,34 +158,58 @@ class GCPTextToSpeechManager:
                 audio_contents.append(response.audio_content)
                 logger.info(f"  Chunk {i} audio content length: {len(response.audio_content)} bytes")
 
-            # Step 4: Combine audio chunks
-            combined = AudioSegment.empty()
-            for content in audio_contents:
-                if not content:
-                    logger.warning("Skipping an empty audio chunk.")
-                    continue
-                # audio = AudioSegment.from_mp3(io.BytesIO(content))
-                # Use from_file and specify the format as "raw" for LINEAR16
-                audio = AudioSegment.from_file(io.BytesIO(content), format="raw", frame_rate=24000, channels=1,
-                                               sample_width=2)
-                combined += audio
+                # Step 4: Combine audio chunks
+                combined = AudioSegment.empty()
+                for content in audio_contents:
+                    if not content:
+                        logger.warning("Skipping an empty audio chunk.")
+                        continue
 
-            # Add this line to increase the volume of the entire combined audio
-            # The value (e.g., 5.0) is in decibels (dB). A positive value increases volume.
-            # You may need to experiment to find the perfect value.
-            # boost_in_db = 5.0
-            # combined = combined.apply_gain(boost_in_db)
+                    audio = AudioSegment.from_file(io.BytesIO(content), format="raw", frame_rate=24000, channels=1,
+                                                   sample_width=2)
+                    combined += audio
 
-            # logger.info(f"All chunks combined. Total audio length: {len(combined)} ms.")
-            # combined.export(local_audio_path, format="mp3")
-            # logger.info(f"Combined audio exported locally: {local_audio_path}")
+                logger.info(f"All chunks combined. Total audio length: {len(combined)} ms.")
 
-            logger.info(f"All chunks combined. Total audio length: {len(combined)} ms.")
-            # Export the combined audio to a .wav file
-            combined.export(local_audio_path, format="wav")
-            logger.info(f"Combined audio exported locally: {local_audio_path}")
+                # --- START NEW: Apply Silence Trimming to the Combined Audio ---
+                if hasattr(self, '_trim_audio_silence'):
+                    original_length_ms = len(combined)
 
-            return local_audio_path
+                    # Apply the same trimming logic used for podcast segments
+                    trimmed_audio = self._trim_audio_silence(combined)
+
+                    trimmed_length_ms = len(trimmed_audio)
+                    logger.info(f"Monologue audio trimmed. Removed: {original_length_ms - trimmed_length_ms} ms.")
+
+                    # Replace the 'combined' variable with the trimmed version
+                    combined = trimmed_audio
+                    # --- END NEW: Apply Silence Trimming to the Combined Audio ---
+
+            # --- START FIX: Path Sanitization for Monologue Export ---
+            input_path = Path(local_audio_path)
+            final_path_to_export = input_path
+
+            # Check if the path is an existing directory
+            if input_path.is_dir():
+                # If it's a directory, append a standardized filename derived from the directory name.
+                file_name = f"Monologue_audio_{uuid.uuid4()}.wav"
+                final_path_to_export = input_path / file_name
+                logger.warning(
+                    f"Input path '{local_audio_path}' is a directory. Exporting monologue file to: {final_path_to_export}")
+            elif not input_path.suffix:
+                # Handle case where the path doesn't exist but has no suffix. Treat as directory + default file name.
+                file_name = f"Monologue_audio_{uuid.uuid4()}.wav"
+                final_path_to_export = input_path / file_name
+                # Ensure the directory is created if the entire path didn't exist
+                Path(input_path).mkdir(parents=True, exist_ok=True)
+                logger.warning(
+                    f"Input path had no suffix. Treating as directory. Exporting file to: {final_path_to_export}")
+
+            # Export the combined audio to a .wav file using the sanitized path
+            combined.export(final_path_to_export, format="wav")
+            logger.info(f"Combined audio exported locally: {final_path_to_export}")
+
+            return str(final_path_to_export)
 
         except Exception as e:
             logger.error(f"Error during audio synthesis: {e}")
@@ -465,19 +487,32 @@ class GCPTextToSpeechManager:
         text_content = text_content.strip()
 
         # Check if the text contains a speaker label pattern
-        # is_podcast_script = re.search(r"^\s*Speaker\d*:", text_content, re.MULTILINE)
         is_podcast_script = re.search(r"^\s*Speaker\s*\d+:", text_content, re.MULTILINE)
 
         if is_podcast_script:
             if individual_audios:
                 logger.info("Detected podcast script format. Using multi-voice synthesis with individual audios.")
+                # Case 1: Multi-voice with separate files (for MuseTalk/avatar lipsync)
                 segment_paths = self.synthesize_podcast_segments(text_content, local_audio_path)
             else:
                 logger.info("Detected podcast script format. Using multi-voice synthesis with one audio.")
-                # segment_paths = self.synthesize_podcast_audio(text_content, local_audio_path)
+                # Case 2: Multi-voice combined into a single track
+                audio_path = self.synthesize_podcast_audio(text_content, local_audio_path)
+                # Format the single path into the expected list[dict] structure
+                segment_paths = [{
+                    "speaker": "Combined_Podcast",
+                    "audio_path": str(audio_path)
+                }]
         else:
-            logger.info("Detected long-form book format. Using single-voice synthesis.")
-            # segment_paths = self.synthesize_long_audio(text_content, local_audio_path)
+            logger.info("Detected long-form book format. Using single-voice synthesis (Monologue support).")
+            # Case 3: Single-voice Monologue/Long-Form Audio
+            # self.synthesize_long_audio returns the final audio file path (str)
+            audio_path = self.synthesize_long_audio(text_content, local_audio_path)
+            # Format the single path into the expected list[dict] structure
+            segment_paths = [{
+                "speaker": "Monologue",
+                "audio_path": str(audio_path)
+            }]
 
         return segment_paths
 
