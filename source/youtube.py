@@ -841,7 +841,7 @@ if __name__ == "__main__":
     #     # if youtube:
     #     #     print(f"✅ Channel ready: {channel_id}")
     #
-    #     bulk_upload_reels()
+    # bulk_upload_reels()
     # except Exception as e:
     #     logging.exception("Critical error in bulk upload.")
     #     print(f"❌ Critical error: {str(e)}")
