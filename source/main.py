@@ -665,7 +665,7 @@ def create_podcast():
                 f"Video combination took {combine_end - combine_start:.2f} seconds. final_video_path: {final_video_path}")
 
             logging.info("Generating metadata for YouTube upload.")
-            title, description, keywords = content_generator.generate_metadata_shorts(book_title,
+            title, description, keywords = content_generator.generate_metadata_mental_coach(book_title,
                                                                                       chapter_text[:500],
                                                                                       language)
 
@@ -732,7 +732,7 @@ def create_podcast():
                 title = clip['metadata']['book_title']
                 logging.info(f"Generating metadata for YouTube upload. {title}")
 
-                title, description, keywords = content_generator.generate_metadata_shorts(title,
+                title, description, keywords = content_generator.generate_metadata_mental_coach(title,
                                                                                           clip['segment_text'],
                                                                                           language)
                 logger.info(f"Generated metadata title: {title} description:  {description} keywords:  {keywords}")

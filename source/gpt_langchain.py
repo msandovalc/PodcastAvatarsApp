@@ -540,6 +540,84 @@ class ContentGenerator:
             logging.error(f"Error generating search terms: {str(e)}", exc_info=True)
             return []
 
+    def get_search_terms_mental_coach(self, book_title: str, num_terms: int, chapter_text: str, language: str) -> List[str]:
+        """
+        Generate SEO-optimized search terms for the video. (Optimized for High-Performance Niche)
+
+        Args:
+            book_title (str): Title of the book.
+            num_terms (int): Number of search terms to generate.
+            chapter_text (str): Script or text content of the video.
+            language (str): Language for the search terms.
+
+        Returns:
+            List[str]: List of search terms.
+        """
+        try:
+            # Convert chapter_text to string if it's a list
+            if isinstance(chapter_text, list):
+                chapter_text = " ".join(chapter_text)
+
+            # Search Terms Prompt (Optimized for High-Performance Niche)
+            search_terms_prompt = """
+            You are a YouTube SEO expert specializing in the **high-performance and mental coaching niche**.
+            Generate {num_terms} SEO-optimized search terms for a YouTube Shorts video about the book '{book_title}' with content from this script:
+            {chapter_text}
+
+            Follow these high-performance SEO guidelines for maximum reach:
+            - **PRIORITIZE long-tail search terms** that reflect viewer intent (e.g., "how to handle soccer pressure", "mental exercises for athletes").
+            - Include specific terms from the book title and script.
+            - Add 3-5 high-volume, niche-specific terms (e.g., champions mindset, sports psychology, elite athletes).
+            - Ensure terms are concise and relevant for YouTube search.
+            - Write entirely in '{language}', matching the tone and cultural nuances.
+            - Do NOT use Markdown formatting like **WORD** or *WORD*; use plain text only.
+            - Return the terms as a JSON array of strings, e.g., ["term1", "term2", "term3"].
+
+            Provide ONLY the JSON array, without additional text or comments.
+            """
+
+            # Assuming PromptTemplate is available in the environment
+            prompt_template = PromptTemplate(
+                input_variables=["book_title", "num_terms", "language", "chapter_text"],
+                template=search_terms_prompt
+            )
+
+            response = self._generate_response(
+                prompt_template,
+                {"book_title": book_title, "num_terms": num_terms, "language": language, "chapter_text": chapter_text}
+            )
+
+            keywords = []
+            try:
+                # Clean and parse response
+                response = response.replace("```json", "").replace("```", "").replace("\n", "").strip()
+                keywords = json.loads(response)
+                if not isinstance(keywords, list) or not all(isinstance(term, str) for term in keywords):
+                    raise ValueError("Response is not a list of strings.")
+                # Clean terms
+                keywords = [term.strip().strip('"').strip("'") for term in keywords if term.strip()][:num_terms]
+            except (json.JSONDecodeError, ValueError) as e:
+                logging.warning(f"Unformatted response received: {response}. Attempting to clean...")
+                # Note: The 'colored' function reference is removed from this code block
+                # as it requires an external library and is not standard Python.
+                # print(colored("[*] LangChain/Gemini returned an unformatted response. Attempting to clean...", "yellow"))
+
+                # Improved cleaning for comma-separated strings
+                response = response.strip("[]").strip()
+                potential_terms = [term.strip() for term in response.split(",") if term.strip()]
+
+                # Assuming 're' is imported if needed for regex substitutions
+                # import re
+                keywords = [re.sub(r'^["\']|["\']$', '', term) for term in potential_terms][:num_terms]
+
+            logging.info(f"Generated {len(keywords)} search terms for subject: {book_title}")
+            # print(colored(f"Generated {len(keywords)} search terms: {', '.join(keywords)}", "cyan"))
+            return keywords
+
+        except Exception as e:
+            logging.error(f"Error generating search terms: {str(e)}", exc_info=True)
+            return []
+
     def generate_metadata(self, book_title: str, chapter_text: str, language: str) -> Tuple[str, str, List[str], str]:
         """
         Generate metadata for a YouTube video, including title, description, keywords, and playlist title.
@@ -721,6 +799,96 @@ class ContentGenerator:
 
             # Generate keywords
             keywords = self.get_search_terms_shorts(book_title, 6, chapter_text, language)
+            # Add emojis to some keywords for better visibility
+            keywords_with_emojis = [f"{kw} 📚" if i % 2 == 0 else kw for i, kw in enumerate(keywords[:4])] + keywords[4:]
+            logging.debug(f"Generated keywords: {keywords_with_emojis}")
+
+            logging.info(f"Generated metadata for book: {book_title}")
+            return title, description, keywords_with_emojis
+
+        except Exception as e:
+            logging.error(f"Error generating metadata: {str(e)}", exc_info=True)
+            print(f"[-] Error: {str(e)}")
+            return "", "", []
+
+    def generate_metadata_mental_coach(self, book_title: str, chapter_text: str, language: str) -> Tuple[str, str, List[str]]:
+        """
+        Generate metadata for a YouTube Shorts video, including title, description, and keywords.
+
+        Args:
+            book_title (str): Title of the book.
+            chapter_text (str): Script or text content of the video.
+            language (str): Language for the metadata.
+
+        Returns:
+            Tuple[str, str, List[str]]: Title, description, and keywords for the YouTube Shorts video.
+        """
+        try:
+            # Title Prompt (Optimized for High-Performance Niche and CTR)
+            title_prompt = """
+            You are an expert copywriter and YouTube Shorts SEO specialist, focused on the **high-performance and mental coaching niche**.
+            Generate a compelling, SEO-optimized title for a YouTube Shorts video.
+
+            The video is about a concept from the book '{book_title}' with content from this script:
+            {chapter_text}
+
+            Follow these high-performance marketing and viralization guidelines for maximum reach (under 60 characters):
+            - Start with a **powerful, urgent verb** (Domina, Desbloquea, Programa, Evita) or a primary keyword related to **MENTALIDAD, ÉLITE o RENDIMIENTO**.
+            - Create a strong curiosity gap that targets a **pain point or a secret** specific to the audience (e.g., 'La élite no quiere que sepas esto', 'Solo 1% lo logra', '¿Por qué fallas en el minuto 90?').
+            - The title MUST be under 60 characters to ensure full visibility on mobile screens.
+            - Include 2-3 highly relevant emojis, prioritizing those that signal the niche (🏆, ⚽, 🧠) and urgency (🔥, 🚨).
+            - Write entirely in '{language}', matching the intense, motivational tone.
+            - Do NOT use Markdown formatting like **WORD** or *WORD*; use plain text only.
+
+            Provide ONLY the title, without quotation marks or additional text.
+            """
+
+            title_template = PromptTemplate(
+                input_variables=["book_title", "chapter_text", "language"],
+                template=title_prompt
+            )
+
+            title = self._generate_response(
+                title_template,
+                {"book_title": book_title, "chapter_text": chapter_text, "language": language}
+            ).strip()
+
+            logging.debug(f"Generated title: {title}")
+
+            # Description Prompt (Optimized for SEO and Engagement)
+            description_prompt = """
+            You are a YouTube SEO and content marketing specialist, specializing in high-performance coaching.
+            Craft a concise, SEO-optimized description for a YouTube Shorts video.
+
+            The video is based on this script:
+            {chapter_text}
+            and explores ideas from the book '{book_title}'.
+
+            Follow these high-performance marketing and viralization guidelines:
+            - **First Line SEO Power:** Start with a gripping sentence (under 160 characters) that immediately hooks the viewer and integrates the video's primary keyword, the book title, and 1-2 relevant emojis (e.g., 📚, 🧠).
+            - **Body:** Create 2 short paragraphs (total 100-150 words) that expand on the concept, focusing on the **transformation/benefit** the viewer gains (e.g., "Aprende a manejar la presión", "Consigue una mentalidad inquebrantable").
+            - **Hashtags Strategy (70/30 Rule):** Include 12-15 hashtags: **#Shorts** (MUST be first), 7-8 highly specific hashtags (e.g., #MentalidadDeCampeon, #Futbol, #DesarrolloPersonal), and 4-5 general hashtags (e.g., #Motivacion, #Crecimiento).
+            - **Dual Call-to-Action:**
+              1. A thought-provoking question to drive comments (e.g., "¿Qué otro secreto mental crees que usan los élite?").
+              2. A closing line to invite continued engagement and following (e.g., "Sigue el canal para desbloquear tu Mente de Campeón 🏆").
+            - Write entirely in '{language}', matching the motivational, high-value tone.
+            - Do NOT use Markdown formatting like **WORD** or *WORD*; use plain text only.
+
+            Provide ONLY the description, without additional text.
+            """
+
+            description_template = PromptTemplate(
+                input_variables=["book_title", "chapter_text", "language"],
+                template=description_prompt
+            )
+            description = self._generate_response(
+                description_template,
+                {"book_title": book_title, "chapter_text": chapter_text, "language": language}
+            ).strip()
+
+            # Generate keywords
+            # Note: Ensure get_search_terms_shorts prioritizes performance/niche terms.
+            keywords = self.get_search_terms_mental_coach(book_title, 6, chapter_text, language)
             # Add emojis to some keywords for better visibility
             keywords_with_emojis = [f"{kw} 📚" if i % 2 == 0 else kw for i, kw in enumerate(keywords[:4])] + keywords[4:]
             logging.debug(f"Generated keywords: {keywords_with_emojis}")
