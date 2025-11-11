@@ -503,6 +503,7 @@ def create_podcast():
     n_threads = 2
     subtitles_position = "center,bottom"
     language = "Spanish"
+    avatar_preparation_needed = True
 
     # video_url = "https://youtu.be/ba6I7IFAMaI?si=ihTAlY9zaAD7_b_Y"
     # output_video_folder = str(TEMP_DIR / "output_6c4ee41e-db26-4b7e-906b-e427c486f44d.mp4")
@@ -586,10 +587,14 @@ def create_podcast():
 
             manager = MuseTalkConfigManager(str(MUSETALK_CONFIG_PATH))
             manager.update_avatar_audio_clips_from_segments(segments=audio_paths,
-                                                            preparation=True,
+                                                            preparation=avatar_preparation_needed,
                                                             video_avatar_1_path=str(AVATARS_DIR / "avatar_01.mp4"),
                                                             video_avatar_2_path=str(AVATARS_DIR / "avatar_02.mp4"),
                                                             )
+
+            if avatar_preparation_needed:
+                avatar_preparation_needed = False
+                logger.info("Avatar preparation set to FALSE for subsequent runs.")
 
             manager.save_yaml()  # Overwrites original YAML
 
@@ -694,7 +699,6 @@ def create_podcast():
                 print(f"The video was uploaded successfully. URL: {video_url}")
             else:
                 print(f"The video could not be uploaded. Status: {upload_status}")
-                return
 
             output_video_folder = os.path.join(OUTPUT_DIR, os.path.basename(final_video_path))
             shutil.move(final_video_path, output_video_folder)
@@ -770,7 +774,7 @@ def create_podcast():
                     logger.info(f"The video was uploaded successfully. URL: {video_url}")
                 else:
                     logger.info(f"The video could not be uploaded. Status: {short_pload_status}")
-                    return
+                    # continue
 
                 # Ensure publish_short_at is timezone-unaware
                 if publish_short_at.tzinfo is not None:
